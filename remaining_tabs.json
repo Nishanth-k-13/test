@@ -1,0 +1,880 @@
+{
+  "url": "https://fyers.co.in/stocks/hdfc-bank-ltd",
+  "tabs": {
+    "tech": {
+      "name": "Technicals",
+      "tab_id": "stk-tab-tech",
+      "panel_id": "stk-panel-tech",
+      "selected": true,
+      "visible": true,
+      "headings": [],
+      "sections": [
+        {
+          "id": "stk-tech-summary",
+          "title": "",
+          "preview": "HDFC Bank  Share PriceNSE786.40+0.60 (0.08%)-20.01% past 1 Year"
+        },
+        {
+          "id": "stk-tech-meters",
+          "title": "",
+          "preview": "Technical meters1 hr2 hrs4 hrs1D1W1MOscillatorsStrong SellSellNeutralBuyStrong BuyBullish signals: 2 Bearish signals: 3 "
+        },
+        {
+          "id": "stk-tech-h-meters",
+          "title": "",
+          "preview": "Technical meters"
+        },
+        {
+          "id": "stk-tech-tf-tabs",
+          "title": "",
+          "preview": "1 hr2 hrs4 hrs1D1W1M"
+        },
+        {
+          "id": "stk-tech-tf-60",
+          "title": "",
+          "preview": "1 hr"
+        },
+        {
+          "id": "stk-tech-tf-120",
+          "title": "",
+          "preview": "2 hrs"
+        },
+        {
+          "id": "stk-tech-tf-240",
+          "title": "",
+          "preview": "4 hrs"
+        },
+        {
+          "id": "stk-tech-tf-1d",
+          "title": "",
+          "preview": "1D"
+        },
+        {
+          "id": "stk-tech-tf-1w",
+          "title": "",
+          "preview": "1W"
+        },
+        {
+          "id": "stk-tech-tf-1m",
+          "title": "",
+          "preview": "1M"
+        },
+        {
+          "id": "stk-tech-osc",
+          "title": "",
+          "preview": "OscillatorsStrong SellSellNeutralBuyStrong BuyBullish signals: 2 Bearish signals: 3 out of 9 oscillatorsRSI53.66NeutralS"
+        },
+        {
+          "id": "stk-tech-ma",
+          "title": "",
+          "preview": "Moving averagesStrong SellSellNeutralBuyStrong BuyBullish signals: 6 Bearish signals: 3 out of 9 moving averagesEMA 9777"
+        },
+        {
+          "id": "stk-tech-pivot",
+          "title": "",
+          "preview": "PivotClassicFibonacciCamarillaWoodieDeMarkPivotClassicResistance 5813.67Resistance 4806.87Resistance 3800.07Resistance 2"
+        },
+        {
+          "id": "stk-tech-highlow",
+          "title": "",
+          "preview": "High & lows1 Day1 Week1 Month3 Months6 MonthsYear to Date1 Year3 Years5 Years10 YearsAll TimeLow778.95776.20732.30726.65"
+        }
+      ],
+      "sub_tabs": [
+        "NSE",
+        "1 hr",
+        "2 hrs",
+        "4 hrs",
+        "1D",
+        "1W",
+        "1M",
+        "Classic",
+        "Fibonacci",
+        "Camarilla",
+        "Woodie",
+        "DeMark"
+      ],
+      "table_count": 0,
+      "content_length": 1500,
+      "stock_price": "786.40"
+    },
+    "corp": {
+      "name": "Corporate Actions",
+      "tab_id": "stk-tab-corp",
+      "panel_id": "stk-panel-corp",
+      "selected": true,
+      "visible": true,
+      "headings": [
+        "Corporate filings & documents",
+        "Announcements",
+        "Annual reports",
+        "Concalls & investor presentations",
+        "HDFCBANK Corporate Actions",
+        "Company details"
+      ],
+      "sections": [
+        {
+          "id": "stk-corp-summary",
+          "title": "",
+          "preview": "HDFC Bank  Share PriceNSE786.40+0.60 (0.08%)-20.01% past 1 Year"
+        },
+        {
+          "id": "stk-corp-sections",
+          "title": "Corporate filings & documents",
+          "preview": "HDFC Bank together with its subsidiaries is engaged in providing a range of banking and financial services, including re"
+        }
+      ],
+      "sub_tabs": [
+        "NSE",
+        "Read more",
+        "All",
+        "Bonus",
+        "Rights",
+        "Splits",
+        "Dividends",
+        "Demerger",
+        "Merger"
+      ],
+      "table_count": 0,
+      "content_length": 9193,
+      "stock_price": "786.40"
+    },
+    "chart": {
+      "name": "Charts",
+      "tab_id": "stk-tab-chart",
+      "panel_id": "stk-panel-chart",
+      "selected": true,
+      "visible": true,
+      "headings": [],
+      "sections": [
+        {
+          "id": "stk-chart-body",
+          "title": "",
+          "preview": "HDFC Bank  Share PriceNSE786.40+0.60 (0.08%)-20.01% past 1 YearSign in to ViewOpen a free Demat account in minutes to st"
+        },
+        {
+          "id": "stk-chart-summary",
+          "title": "",
+          "preview": "HDFC Bank  Share PriceNSE786.40+0.60 (0.08%)-20.01% past 1 Year"
+        },
+        {
+          "id": "stk-chart-chart",
+          "title": "",
+          "preview": "Sign in to ViewOpen a free Demat account in minutes to start investing and screening .LoginSign Up"
+        },
+        {
+          "id": "stk-chart-lock",
+          "title": "",
+          "preview": "Sign in to ViewOpen a free Demat account in minutes to start investing and screening .LoginSign Up"
+        }
+      ],
+      "sub_tabs": [
+        "NSE"
+      ],
+      "table_count": 0,
+      "content_length": 171,
+      "stock_price": "786.40"
+    },
+    "fo": {
+      "name": "F&O",
+      "tab_id": "stk-tab-fo",
+      "panel_id": "stk-panel-fo",
+      "selected": true,
+      "visible": true,
+      "headings": [],
+      "sections": [
+        {
+          "id": "stk-fo-body",
+          "title": "",
+          "preview": "HDFC Bank  Share PriceNSE786.40+0.60 (0.08%)-20.01% past 1 YearOptionsFutures02 Jan 25+9DBid/AskPriceGreeksStradleCustom"
+        },
+        {
+          "id": "stk-fo-summary",
+          "title": "",
+          "preview": "HDFC Bank  Share PriceNSE786.40+0.60 (0.08%)-20.01% past 1 YearOptionsFutures"
+        },
+        {
+          "id": "stk-fo-type-toggle",
+          "title": "",
+          "preview": "OptionsFutures"
+        },
+        {
+          "id": "stk-fo-type-options",
+          "title": "",
+          "preview": "Options"
+        },
+        {
+          "id": "stk-fo-type-futures",
+          "title": "",
+          "preview": "Futures"
+        },
+        {
+          "id": "stk-fo-chain",
+          "title": "",
+          "preview": "02 Jan 25+9DBid/AskPriceGreeksStradleCustomCALLSQty/otsPUTSSign in to ViewOpen a free Demat account in minutes to start "
+        },
+        {
+          "id": "stk-fo-view-tabs",
+          "title": "",
+          "preview": "PriceGreeksStradleCustom"
+        },
+        {
+          "id": "stk-fo-view-price",
+          "title": "",
+          "preview": "Price"
+        },
+        {
+          "id": "stk-fo-view-greeks",
+          "title": "",
+          "preview": "Greeks"
+        },
+        {
+          "id": "stk-fo-view-stradle",
+          "title": "",
+          "preview": "Stradle"
+        },
+        {
+          "id": "stk-fo-view-custom",
+          "title": "",
+          "preview": "Custom"
+        }
+      ],
+      "sub_tabs": [
+        "NSE",
+        "Options",
+        "Futures",
+        "Price",
+        "Greeks",
+        "Stradle",
+        "Custom"
+      ],
+      "table_count": 0,
+      "content_length": 258,
+      "stock_price": "786.40"
+    },
+    "hold": {
+      "name": "Shareholding",
+      "tab_id": "stk-tab-hold",
+      "panel_id": "stk-panel-hold",
+      "selected": true,
+      "visible": true,
+      "headings": [
+        "HDFC Bank Shareholding summary",
+        "HDFC Bank Shareholding Pattern",
+        "HDFC Bank Bulk & block deals",
+        "HDFC Bank Insider trading & SAST"
+      ],
+      "sections": [
+        {
+          "id": "stk-hold-summary",
+          "title": "",
+          "preview": "HDFC Bank  Share PriceNSE786.40+0.60 (0.08%)-20.01% past 1 Year"
+        },
+        {
+          "id": "stk-hold-sections",
+          "title": "HDFC Bank  Shareholding summary",
+          "preview": "HDFC Bank  Shareholding summaryQuarterlyYearlyPromoters0%FII44.04%DII10.59%MF29.54%Others15.83%PromotersFIIDIIMFOthersQu"
+        },
+        {
+          "id": "stk-hold-summary-chart",
+          "title": "HDFC Bank  Shareholding summary",
+          "preview": "HDFC Bank  Shareholding summaryQuarterlyYearlyPromoters0%FII44.04%DII10.59%MF29.54%Others15.83%PromotersFIIDIIMFOthersQu"
+        },
+        {
+          "id": "stk-hold-summary-chart-title",
+          "title": "",
+          "preview": "HDFC Bank  Shareholding summary"
+        },
+        {
+          "id": "stk-hold-details",
+          "title": "HDFC Bank  Shareholding Pattern",
+          "preview": "HDFC Bank  Shareholding PatternQuarterlyYearlyNamePromotersFIIDII - OthersDII - MFsRetail & OthersDec 2024Mar 2025Jun 20"
+        },
+        {
+          "id": "stk-hold-details-title",
+          "title": "",
+          "preview": "HDFC Bank  Shareholding Pattern"
+        },
+        {
+          "id": "stk-hold-details-table",
+          "title": "",
+          "preview": "NamePromotersFIIDII - OthersDII - MFsRetail & OthersDec 2024Mar 2025Jun 2025Sep 2025Dec 2025Mar 202600000049.1948.2848.8"
+        },
+        {
+          "id": "stk-hold-bulk",
+          "title": "HDFC Bank  Bulk & block deals",
+          "preview": "HDFC Bank  Bulk & block dealsNameSchroder Emeg Mkts Fd A Separate Invt Fund Within The Schroder Cap Mgmt CtSchroder Paci"
+        },
+        {
+          "id": "stk-hold-bulk-title",
+          "title": "",
+          "preview": "HDFC Bank  Bulk & block deals"
+        },
+        {
+          "id": "stk-hold-bulk-table",
+          "title": "",
+          "preview": "NameSchroder Emeg Mkts Fd A Separate Invt Fund Within The Schroder Cap Mgmt CtSchroder Pacific Emerging Markets FundBlue"
+        },
+        {
+          "id": "stk-hold-insider",
+          "title": "HDFC Bank  Insider trading & SAST",
+          "preview": "HDFC Bank  Insider trading & SASTClient nameLopa RuparelLopa RuparelAnita IyerVaishali VyasLopa RuparelVaishali VyasChak"
+        },
+        {
+          "id": "stk-hold-insider-title",
+          "title": "",
+          "preview": "HDFC Bank  Insider trading & SAST"
+        },
+        {
+          "id": "stk-hold-insider-table",
+          "title": "",
+          "preview": "Client nameLopa RuparelLopa RuparelAnita IyerVaishali VyasLopa RuparelVaishali VyasChakrapani VenkatachariLopa RuparelCh"
+        }
+      ],
+      "sub_tabs": [
+        "NSE"
+      ],
+      "table_count": 3,
+      "content_length": 3374,
+      "stock_price": "786.40"
+    },
+    "news": {
+      "name": "News",
+      "tab_id": "stk-tab-news",
+      "panel_id": "stk-panel-news",
+      "selected": true,
+      "visible": true,
+      "headings": [
+        "News"
+      ],
+      "sections": [
+        {
+          "id": "stk-news-summary",
+          "title": "",
+          "preview": "HDFC Bank  Share PriceNSE786.40+0.60 (0.08%)-20.01% past 1 Year"
+        },
+        {
+          "id": "stk-news-list-wrap",
+          "title": "News",
+          "preview": "NewsHdfc Bank Ltd.: Rs 20.29 Crores Nse Block Trade; For ~ 261,100 Shares, At Rs 776.95EquityHDFCBANK19 Jun 2026HDFC Ban"
+        },
+        {
+          "id": "stk-news-h2",
+          "title": "",
+          "preview": "News"
+        },
+        {
+          "id": "stk-news-item-list",
+          "title": "",
+          "preview": "Hdfc Bank Ltd.: Rs 20.29 Crores Nse Block Trade; For ~ 261,100 Shares, At Rs 776.95EquityHDFCBANK19 Jun 2026HDFC Bank bl"
+        },
+        {
+          "id": "stk-news-item-2-6a34f6661b443ef97a3e3792",
+          "title": "",
+          "preview": "Hdfc Bank Ltd.: Rs 20.29 Crores Nse Block Trade; For ~ 261,100 Shares, At Rs 776.95EquityHDFCBANK19 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a34f6661b443ef97a3e3792-title",
+          "title": "",
+          "preview": "Hdfc Bank Ltd.: Rs 20.29 Crores Nse Block Trade; For ~ 261,100 Shares, At Rs 776.95"
+        },
+        {
+          "id": "stk-news-item-2-6a34f6661b443ef97a3e3792-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a34f6661b443ef97a3e3792-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a34f6661b443ef97a3e3792-date",
+          "title": "",
+          "preview": "19 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a34bb821b443ef97a3e375a",
+          "title": "",
+          "preview": "HDFC Bank block trade of 353401 shares valued at Rs 27.88 croresEquityHDFCBANK19 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a34bb821b443ef97a3e375a-title",
+          "title": "",
+          "preview": "HDFC Bank block trade of 353401 shares valued at Rs 27.88 crores"
+        },
+        {
+          "id": "stk-news-item-2-6a34bb821b443ef97a3e375a-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a34bb821b443ef97a3e375a-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a34bb821b443ef97a3e375a-date",
+          "title": "",
+          "preview": "19 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a33d4bac993d4cafe5d7cef",
+          "title": "",
+          "preview": "RBI extends Keki Mistry’s interim chair role at HDFCBANK, dividend approvedEquityHDFCBANK18 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a33d4bac993d4cafe5d7cef-title",
+          "title": "",
+          "preview": "RBI extends Keki Mistry’s interim chair role at HDFCBANK, dividend approved"
+        },
+        {
+          "id": "stk-news-item-2-6a33d4bac993d4cafe5d7cef-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a33d4bac993d4cafe5d7cef-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a33d4bac993d4cafe5d7cef-date",
+          "title": "",
+          "preview": "18 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a32331aa900658fe6af713e",
+          "title": "",
+          "preview": "HDFCBANK sees sizeable NSE block trade worth Rs 77.42 crores executedEquityHDFCBANK17 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a32331aa900658fe6af713e-title",
+          "title": "",
+          "preview": "HDFCBANK sees sizeable NSE block trade worth Rs 77.42 crores executed"
+        },
+        {
+          "id": "stk-news-item-2-6a32331aa900658fe6af713e-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a32331aa900658fe6af713e-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a32331aa900658fe6af713e-date",
+          "title": "",
+          "preview": "17 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a322c90a900658fe6af7132",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 19.20 crore NSE block trade in large equity dealEquityHDFCBANK17 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a322c90a900658fe6af7132-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 19.20 crore NSE block trade in large equity deal"
+        },
+        {
+          "id": "stk-news-item-2-6a322c90a900658fe6af7132-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a322c90a900658fe6af7132-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a322c90a900658fe6af7132-date",
+          "title": "",
+          "preview": "17 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a3226eba900658fe6af7127",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 86.86 crores NSE block trade at Rs 786.10 per shareEquityHDFCBANK17 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a3226eba900658fe6af7127-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 86.86 crores NSE block trade at Rs 786.10 per share"
+        },
+        {
+          "id": "stk-news-item-2-6a3226eba900658fe6af7127-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a3226eba900658fe6af7127-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a3226eba900658fe6af7127-date",
+          "title": "",
+          "preview": "17 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a321c9da900658fe6af711e",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 39.88 crores NSE block trade at Rs 785.85 per shareEquityHDFCBANK17 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a321c9da900658fe6af711e-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 39.88 crores NSE block trade at Rs 785.85 per share"
+        },
+        {
+          "id": "stk-news-item-2-6a321c9da900658fe6af711e-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a321c9da900658fe6af711e-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a321c9da900658fe6af711e-date",
+          "title": "",
+          "preview": "17 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a2f757322dd2d31efd089ae",
+          "title": "",
+          "preview": "Block trade reported in HDFC Bank shares on NSE at Rs 790.25 levelEquityHDFCBANK15 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a2f757322dd2d31efd089ae-title",
+          "title": "",
+          "preview": "Block trade reported in HDFC Bank shares on NSE at Rs 790.25 level"
+        },
+        {
+          "id": "stk-news-item-2-6a2f757322dd2d31efd089ae-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a2f757322dd2d31efd089ae-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a2f757322dd2d31efd089ae-date",
+          "title": "",
+          "preview": "15 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a2f756922dd2d31efd089ad",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 19.30 crores NSE block trade at Rs 789.90 per shareEquityHDFCBANK15 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a2f756922dd2d31efd089ad-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 19.30 crores NSE block trade at Rs 789.90 per share"
+        },
+        {
+          "id": "stk-news-item-2-6a2f756922dd2d31efd089ad-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a2f756922dd2d31efd089ad-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a2f756922dd2d31efd089ad-date",
+          "title": "",
+          "preview": "15 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a2f712c22dd2d31efd0898a",
+          "title": "",
+          "preview": "Nomura retains buy call on HDFCBANK with upside to Rs 950 targetEquityHDFCBANK15 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a2f712c22dd2d31efd0898a-title",
+          "title": "",
+          "preview": "Nomura retains buy call on HDFCBANK with upside to Rs 950 target"
+        },
+        {
+          "id": "stk-news-item-2-6a2f712c22dd2d31efd0898a-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a2f712c22dd2d31efd0898a-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a2f712c22dd2d31efd0898a-date",
+          "title": "",
+          "preview": "15 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a2a67328e9a216bdf5f9b5a",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 38.18 crores NSE block trade at Rs 749.95 per shareEquityHDFCBANK11 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a2a67328e9a216bdf5f9b5a-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 38.18 crores NSE block trade at Rs 749.95 per share"
+        },
+        {
+          "id": "stk-news-item-2-6a2a67328e9a216bdf5f9b5a-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a2a67328e9a216bdf5f9b5a-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a2a67328e9a216bdf5f9b5a-date",
+          "title": "",
+          "preview": "11 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a28fc4dbfb46937d5433b65",
+          "title": "",
+          "preview": "Block trade in HDFC Bank shares on NSE totals Rs 88.18 croresEquityHDFCBANK10 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a28fc4dbfb46937d5433b65-title",
+          "title": "",
+          "preview": "Block trade in HDFC Bank shares on NSE totals Rs 88.18 crores"
+        },
+        {
+          "id": "stk-news-item-2-6a28fc4dbfb46937d5433b65-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a28fc4dbfb46937d5433b65-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a28fc4dbfb46937d5433b65-date",
+          "title": "",
+          "preview": "10 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a28fb37bfb46937d5433b64",
+          "title": "",
+          "preview": "Block deal in HDFC Bank shares on NSE worth about Rs 27.31 croresEquityHDFCBANK10 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a28fb37bfb46937d5433b64-title",
+          "title": "",
+          "preview": "Block deal in HDFC Bank shares on NSE worth about Rs 27.31 crores"
+        },
+        {
+          "id": "stk-news-item-2-6a28fb37bfb46937d5433b64-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a28fb37bfb46937d5433b64-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a28fb37bfb46937d5433b64-date",
+          "title": "",
+          "preview": "10 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a28de00bfb46937d5433b3e",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 31.01 crores NSE block trade in large equity dealEquityHDFCBANK10 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a28de00bfb46937d5433b3e-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 31.01 crores NSE block trade in large equity deal"
+        },
+        {
+          "id": "stk-news-item-2-6a28de00bfb46937d5433b3e-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a28de00bfb46937d5433b3e-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a28de00bfb46937d5433b3e-date",
+          "title": "",
+          "preview": "10 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a263ae999547fd6cc6ebe74",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 23.94 crores NSE block trade at Rs 739.55 per shareEquityHDFCBANK8 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a263ae999547fd6cc6ebe74-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 23.94 crores NSE block trade at Rs 739.55 per share"
+        },
+        {
+          "id": "stk-news-item-2-6a263ae999547fd6cc6ebe74-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a263ae999547fd6cc6ebe74-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a263ae999547fd6cc6ebe74-date",
+          "title": "",
+          "preview": "8 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a263ad299547fd6cc6ebe73",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 32.12 crores NSE block trade at Rs 738 per shareEquityHDFCBANK8 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a263ad299547fd6cc6ebe73-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 32.12 crores NSE block trade at Rs 738 per share"
+        },
+        {
+          "id": "stk-news-item-2-6a263ad299547fd6cc6ebe73-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a263ad299547fd6cc6ebe73-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a263ad299547fd6cc6ebe73-date",
+          "title": "",
+          "preview": "8 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a1fd92a0800a9d28e5ef72c",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 65.74 crores NSE block trade at Rs 748.05 per shareEquityHDFCBANK3 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a1fd92a0800a9d28e5ef72c-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 65.74 crores NSE block trade at Rs 748.05 per share"
+        },
+        {
+          "id": "stk-news-item-2-6a1fd92a0800a9d28e5ef72c-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a1fd92a0800a9d28e5ef72c-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a1fd92a0800a9d28e5ef72c-date",
+          "title": "",
+          "preview": "3 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a1fc7f20800a9d28e5ef715",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 22.45 crores NSE block trade at fixed price levelEquityHDFCBANK3 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a1fc7f20800a9d28e5ef715-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 22.45 crores NSE block trade at fixed price level"
+        },
+        {
+          "id": "stk-news-item-2-6a1fc7f20800a9d28e5ef715-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a1fc7f20800a9d28e5ef715-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a1fc7f20800a9d28e5ef715-date",
+          "title": "",
+          "preview": "3 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a1e8b545353cd99a9d00c61",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 96.42 crores NSE block trade at Rs 748.70 per shareEquityHDFCBANK2 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a1e8b545353cd99a9d00c61-title",
+          "title": "",
+          "preview": "HDFCBANK sees Rs 96.42 crores NSE block trade at Rs 748.70 per share"
+        },
+        {
+          "id": "stk-news-item-2-6a1e8b545353cd99a9d00c61-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a1e8b545353cd99a9d00c61-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a1e8b545353cd99a9d00c61-date",
+          "title": "",
+          "preview": "2 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a1e84c15353cd99a9d00c5c",
+          "title": "",
+          "preview": "HDFC Bank sees Rs 38.84 crores NSE block trade in 516,791 sharesEquityHDFCBANK2 Jun 2026"
+        },
+        {
+          "id": "stk-news-item-2-6a1e84c15353cd99a9d00c5c-title",
+          "title": "",
+          "preview": "HDFC Bank sees Rs 38.84 crores NSE block trade in 516,791 shares"
+        },
+        {
+          "id": "stk-news-item-2-6a1e84c15353cd99a9d00c5c-category",
+          "title": "",
+          "preview": "Equity"
+        },
+        {
+          "id": "stk-news-item-2-6a1e84c15353cd99a9d00c5c-symbol",
+          "title": "",
+          "preview": "HDFCBANK"
+        },
+        {
+          "id": "stk-news-item-2-6a1e84c15353cd99a9d00c5c-date",
+          "title": "",
+          "preview": "2 Jun 2026"
+        }
+      ],
+      "sub_tabs": [
+        "NSE"
+      ],
+      "table_count": 0,
+      "content_length": 1994,
+      "stock_price": "786.40"
+    }
+  }
+}
