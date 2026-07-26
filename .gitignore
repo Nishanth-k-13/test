@@ -1,6 +1,6 @@
 .venv
 .pytest_cache
 about-stocks/.pytest_cache
-content_tabs/.pytest_cache
+content-tabs/.pytest_cache
 faqs/.pytest_cache
 load-test/.venv
