@@ -9,6 +9,7 @@ warnings.simplefilter('ignore', InsecureRequestWarning)
 
 CSV_FILE = '/Users/codingmart/test/key-ratios/url.csv'
 OUTPUT_FILE = '/Users/codingmart/test/key-ratios/live-stats-report.csv'
+NO_DATA_FILE = '/Users/codingmart/test/key-ratios/no-data-url.csv'
 
 def check_url(url):
     result = {
@@ -94,6 +95,14 @@ def main():
         
     print(f"\nDone. Report saved to {OUTPUT_FILE}")
 
+    # Write no-data-urls to CSV
+    no_data_urls = [r['url'] for r in results if not r['has_data']]
+    with open(NO_DATA_FILE, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['url'])
+        for u in no_data_urls:
+            writer.writerow([u])
+    print(f"Saved {len(no_data_urls)} URLs with no data to {NO_DATA_FILE}")
     # Print summary
     total = len(results)
     with_data = sum(1 for r in results if r['has_data'])

@@ -4,3 +4,29 @@ about-stocks/.pytest_cache
 content-tabs/.pytest_cache
 faqs/.pytest_cache
 load-test/.venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest
+.coverage
+htmlcov/
+pytest.xml
+
+# Allure Reports
+allure-results/
+allure-report/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+
+# Temporary test data
+seo_report.csv
+retry_urls.csv
+good_urls_temp.csv
+urls_all.csv
+*.log
