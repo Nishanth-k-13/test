@@ -24,10 +24,31 @@ URLS_FILE = os.getenv("URLS_FILE", "url.csv")
 SCREENSHOT_DIR = os.getenv("SCREENSHOT_DIR", "screenshots")
 
 
-SLEEP_INTERVAL = int(os.getenv("SLEEP_TIME", "0"))
-URLS_BEFORE_SLEEP = int(os.getenv("URLS_BATCH_SIZE", "20"))
+SLEEP_INTERVAL = 10
+URLS_BEFORE_SLEEP = 20
+WORKERS = 4
+RERUN_FAILURES = 1
+FAILED_URLS_LOG = "failed-urls.csv"  # live log: url + section on each failure
 
 _worker_url_count = 0
+
+
+def _effective_workers() -> int:
+    """Worker count used to split URLS_BEFORE_SLEEP (set by run_tests.sh when possible)."""
+    env = os.getenv("EFFECTIVE_WORKERS")
+    if env and str(env).isdigit():
+        return max(1, int(env))
+    if isinstance(WORKERS, int):
+        return max(1, WORKERS)
+    if isinstance(WORKERS, str) and WORKERS.isdigit():
+        return max(1, int(WORKERS))
+    if WORKERS == "auto":
+        return max(1, os.cpu_count() or 4)
+    return 1
+
+
+def _urls_per_worker_before_sleep() -> int:
+    return max(1, URLS_BEFORE_SLEEP // _effective_workers())
 
 FINANCIAL_OVERVIEW_CARDS = [
     "Compounded Sales Growth",
@@ -160,14 +181,16 @@ def setup_browser(request, url: str):
 
     request.addfinalizer(teardown)
 
-    # Optional throttle between URL batches (per worker)
+    batch_size = _urls_per_worker_before_sleep()
     if (
         SLEEP_INTERVAL > 0
         and _worker_url_count > 1
-        and (_worker_url_count - 1) % URLS_BEFORE_SLEEP == 0
+        and (_worker_url_count - 1) % batch_size == 0
     ):
+        workers = _effective_workers()
         print(
-            f"Worker processed {_worker_url_count - 1} URLs. "
+            f"Processed {URLS_BEFORE_SLEEP} URLs total "
+            f"({batch_size} per worker x {workers} workers). "
             f"Sleeping for {SLEEP_INTERVAL}s..."
         )
         page.wait_for_timeout(SLEEP_INTERVAL * 1000)

@@ -27,6 +27,9 @@ allure-report/
 # Temporary test data
 seo_report.csv
 retry_urls.csv
+failed-urls.csv
+failed_urls.csv
+report_records.json
 good_urls_temp.csv
 urls_all.csv
 *.log

@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import csv
+import json
+import os
 import re
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -12,6 +16,18 @@ import pytest
 from report_generator import _format_range, generate_report
 
 TEST_CLASS = "tests.MarcomSeoProfitLossTest"
+REPORT_RECORDS_FILE = Path(__file__).with_name("report_records.json")
+RETRY_URLS_FILE = Path(__file__).with_name("retry_urls.csv")
+
+
+def _failed_urls_log_path() -> Path:
+    try:
+        import test_profit_loss_pages as suite
+
+        name = getattr(suite, "FAILED_URLS_LOG", "failed-urls.csv")
+    except Exception:
+        name = os.getenv("FAILED_URLS_LOG", "failed-urls.csv")
+    return Path(__file__).with_name(name)
 
 SECTION_META: dict[str, dict[str, str]] = {
     "test_Section_1_Header_and_Meta": {
@@ -108,6 +124,12 @@ _session_start = 0.0
 def pytest_sessionstart(session: pytest.Session) -> None:
     global _session_start
     _session_start = time.time()
+
+    if hasattr(session.config, "workerinput"):
+        return
+
+    log_path = _failed_urls_log_path()
+    log_path.write_text("url,section,time\n", encoding="utf-8")
 
 
 def _extract_url(nodeid: str) -> str:
@@ -212,6 +234,56 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
     record = {**record, "n": _record_counter}
     _collected_records.append(record)
 
+    if record.get("status") == "failed" and record.get("url"):
+        _append_live_failure(record)
+
+
+def _append_live_failure(record: dict[str, Any]) -> None:
+    """Append url + section to failed-urls.csv as soon as a test fails."""
+    log_path = _failed_urls_log_path()
+    with log_path.open("a", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow([
+            record.get("url", ""),
+            record.get("suite", record.get("method", "")),
+            record.get("start", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")),
+        ])
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def _write_retry_urls_from_log() -> None:
+    """Unique failed URLs from the live log — used by run_tests.sh for retries."""
+    log_path = _failed_urls_log_path()
+    if not log_path.exists() or log_path.stat().st_size <= len("url,section,time\n"):
+        if RETRY_URLS_FILE.exists():
+            RETRY_URLS_FILE.unlink()
+        return
+
+    urls: set[str] = set()
+    with log_path.open(encoding="utf-8", newline="") as handle:
+        for row in csv.DictReader(handle):
+            url = (row.get("url") or "").strip()
+            if url:
+                urls.add(url)
+
+    if urls:
+        RETRY_URLS_FILE.write_text("\n".join(sorted(urls)) + "\n", encoding="utf-8")
+    elif RETRY_URLS_FILE.exists():
+        RETRY_URLS_FILE.unlink()
+
+
+def _merge_records(
+    previous: list[dict[str, Any]], current: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    merged = {(r.get("url", ""), r.get("method", "")): r for r in previous}
+    for record in current:
+        merged[(record.get("url", ""), record.get("method", ""))] = record
+    return sorted(
+        merged.values(),
+        key=lambda r: (r.get("url", ""), r.get("method", "")),
+    )
+
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     if hasattr(session.config, "workerinput"):
@@ -219,14 +291,26 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     if not _collected_records:
         return
 
+    records = list(_collected_records)
+    merge_path = os.getenv("MERGE_REPORT_RECORDS")
+    if merge_path and Path(merge_path).exists():
+        previous = json.loads(Path(merge_path).read_text(encoding="utf-8"))
+        records = _merge_records(previous, records)
+
+    REPORT_RECORDS_FILE.write_text(
+        json.dumps(records, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    _write_retry_urls_from_log()
+
     total_time = time.time() - _session_start
-    passed = sum(1 for r in _collected_records if r["status"] == "passed")
-    failed = sum(1 for r in _collected_records if r["status"] == "failed")
-    skipped = sum(1 for r in _collected_records if r["status"] == "skipped")
-    unique_urls = len({r["url"] for r in _collected_records if r["url"]})
+    passed = sum(1 for r in records if r["status"] == "passed")
+    failed = sum(1 for r in records if r["status"] == "failed")
+    skipped = sum(1 for r in records if r["status"] == "skipped")
+    unique_urls = len({r["url"] for r in records if r["url"]})
 
     subtitle = (
-        f"Execution Range: <span id=\"hdrRange\">{_format_range(_collected_records)}</span> "
+        f"Execution Range: <span id=\"hdrRange\">{_format_range(records)}</span> "
         f"&middot; <span>1 test class</span> "
         f"&middot; {unique_urls} target URLs "
         f"&middot; {total_time:.0f}s total runtime "
@@ -234,7 +318,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     )
 
     output = generate_report(
-        _collected_records,
+        records,
         title="Test Execution Report — Profit & Loss Pages",
         eyebrow="Automated Test Suite · Marcom SEO Pages Frontend · Profit & Loss",
         subtitle=subtitle,

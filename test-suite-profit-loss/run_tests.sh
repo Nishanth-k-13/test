@@ -3,91 +3,33 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# ---------------------------------------------------------------------------
-# Options (env vars or flags):
-#   WORKERS / -w N       parallel workers (default: 1). Use "auto" for all cores.
-#   SLEEP_TIME / -s N    seconds to sleep between URL batches (default: 0 = off)
-#   URLS_BATCH_SIZE / -b N   sleep every N URLs per worker (default: 20)
-#   URLS_FILE            path to CSV of URLs (default: url.csv)
-#   HEADED=1             show browser UI
-#
-# Examples:
-#   ./run_tests.sh
-#   ./run_tests.sh -w 4
-#   ./run_tests.sh -w auto -s 6 -b 20
-#   WORKERS=4 SLEEP_TIME=6 ./run_tests.sh
-#   ./run_tests.sh -w 2 -- -k Header
-# ---------------------------------------------------------------------------
-
-WORKERS="${WORKERS:-1}"
-SLEEP_TIME="${SLEEP_TIME:-0}"
-URLS_BATCH_SIZE="${URLS_BATCH_SIZE:-20}"
-EXTRA_ARGS=()
-
-usage() {
-  cat <<'EOF'
-Usage: ./run_tests.sh [options] [-- pytest-args...]
-
-Options:
-  -w, --workers N       Number of parallel workers (default: 1, or "auto")
-  -s, --sleep N         Sleep N seconds between URL batches (default: 0)
-  -b, --batch-size N    Sleep every N URLs per worker (default: 20)
-  -h, --help            Show this help
-
-Environment:
-  WORKERS, SLEEP_TIME, URLS_BATCH_SIZE, URLS_FILE, HEADED
-
-Examples:
-  ./run_tests.sh
-  ./run_tests.sh -w 4
-  ./run_tests.sh -w auto -s 6 -b 20
-  WORKERS=4 SLEEP_TIME=6 ./run_tests.sh
-EOF
-}
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -w|--workers)
-      WORKERS="$2"
-      shift 2
-      ;;
-    -s|--sleep)
-      SLEEP_TIME="$2"
-      shift 2
-      ;;
-    -b|--batch-size)
-      URLS_BATCH_SIZE="$2"
-      shift 2
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    --)
-      shift
-      EXTRA_ARGS+=("$@")
-      break
-      ;;
-    *)
-      EXTRA_ARGS+=("$1")
-      shift
-      ;;
-  esac
-done
-
-export URLS_FILE="${URLS_FILE:-url.csv}"
-export SLEEP_TIME
-export URLS_BATCH_SIZE
-
 echo "Installing dependencies..."
 python3 -m pip install -q -r requirements.txt
 python3 -m playwright install chromium
 
+read -r WORKERS SLEEP_INTERVAL URLS_BEFORE_SLEEP RERUN_FAILURES FAILED_URLS_LOG <<< "$(
+  python3 -c "import test_profit_loss_pages as m; print(m.WORKERS, m.SLEEP_INTERVAL, m.URLS_BEFORE_SLEEP, m.RERUN_FAILURES, m.FAILED_URLS_LOG)"
+)"
+
+if [[ "${WORKERS}" == "auto" ]]; then
+  EFFECTIVE_WORKERS="$(python3 -c "import os; print(os.cpu_count() or 4)")"
+else
+  EFFECTIVE_WORKERS="${WORKERS}"
+fi
+
+PER_WORKER_BATCH=$(( URLS_BEFORE_SLEEP / EFFECTIVE_WORKERS ))
+if [[ "${PER_WORKER_BATCH}" -lt 1 ]]; then
+  PER_WORKER_BATCH=1
+fi
+
 echo ""
 echo "Running Profit & Loss page test suite..."
-echo "  URLs file   : ${URLS_FILE}"
-echo "  Workers     : ${WORKERS}"
-echo "  Sleep       : ${SLEEP_TIME}s every ${URLS_BATCH_SIZE} URLs (per worker)"
+echo "  URLs file : ${URLS_FILE:-url.csv}"
+echo "  Workers   : ${WORKERS} (${EFFECTIVE_WORKERS} effective)"
+echo "  Sleep     : ${SLEEP_INTERVAL}s every ${URLS_BEFORE_SLEEP} URLs total (~${PER_WORKER_BATCH} per worker)"
+echo "  Re-run    : ${RERUN_FAILURES} retry round(s) for failed URLs (0 = off)"
+echo "  Failures  : ${FAILED_URLS_LOG} (live url + section)"
+echo "  (all from test_profit_loss_pages.py)"
 echo ""
 
 PYTEST_ARGS=(test_profit_loss_pages.py -v --tb=short)
@@ -96,7 +38,51 @@ if [[ "${WORKERS}" != "1" ]]; then
   PYTEST_ARGS+=(-n "${WORKERS}" --dist loadscope)
 fi
 
-pytest "${PYTEST_ARGS[@]}" "${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}"
+export EFFECTIVE_WORKERS="${EFFECTIVE_WORKERS}"
+export FAILED_URLS_LOG="${FAILED_URLS_LOG}"
+ORIGINAL_URLS_FILE="${URLS_FILE:-url.csv}"
+export URLS_FILE="${ORIGINAL_URLS_FILE}"
+
+rm -f "${FAILED_URLS_LOG}" report_records.json retry_urls.csv
+unset MERGE_REPORT_RECORDS
+
+retry_round=0
+while true; do
+  if [[ "${retry_round}" -gt 0 ]]; then
+    echo ""
+    echo "Retry round ${retry_round}/${RERUN_FAILURES} for failed URLs..."
+    export URLS_FILE="retry_urls.csv"
+    export MERGE_REPORT_RECORDS="report_records.json"
+  fi
+
+  set +e
+  pytest "${PYTEST_ARGS[@]}" "$@"
+  pytest_exit=$?
+  set -e
+
+  if [[ ! -f retry_urls.csv ]] || [[ ! -s retry_urls.csv ]]; then
+    break
+  fi
+
+  if [[ "${RERUN_FAILURES}" -eq 0 ]] || [[ "${retry_round}" -ge "${RERUN_FAILURES}" ]]; then
+    break
+  fi
+
+  retry_round=$((retry_round + 1))
+done
+
+export URLS_FILE="${ORIGINAL_URLS_FILE}"
+unset MERGE_REPORT_RECORDS
+
+if [[ -f "${FAILED_URLS_LOG}" ]] && [[ $(wc -l < "${FAILED_URLS_LOG}" | tr -d ' ') -gt 1 ]]; then
+  failure_rows=$(( $(wc -l < "${FAILED_URLS_LOG}" | tr -d ' ') - 1 ))
+  echo ""
+  echo "${failure_rows} failure(s) logged in ${FAILED_URLS_LOG} (see url + section)."
+fi
+
+rm -f retry_urls.csv
 
 echo ""
 echo "Done. Open Marcom_SEO_Report.html in your browser."
+
+exit "${pytest_exit:-0}"
