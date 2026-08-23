@@ -30,3 +30,10 @@ retry_urls.csv
 good_urls_temp.csv
 urls_all.csv
 *.log
+
+# Screenshots from UI test suites
+screenshots/
+**/screenshots/
+
+# login-automation
+/login-automation/venv

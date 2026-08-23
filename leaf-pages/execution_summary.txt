@@ -1,0 +1,10 @@
+======================================
+      DETAILED EXECUTION SUMMARY      
+======================================
+Total Time        : 5.99 seconds
+Total Test Cases  : 1
+Total Suites      : 1
+Total Passed      : 1
+Total Failed      : 0
+Total Errors      : 0
+======================================
