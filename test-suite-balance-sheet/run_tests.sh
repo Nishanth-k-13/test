@@ -12,15 +12,14 @@ fi
 # shellcheck disable=SC1091
 source "${VENV_DIR}/bin/activate"
 
-# Avoid sandbox browser path overrides when present
 unset PLAYWRIGHT_BROWSERS_PATH
 
 echo "Installing dependencies..."
 python -m pip install -q -r requirements.txt
 python -m playwright install chromium
 
-read -r WORKERS SLEEP_INTERVAL URLS_BEFORE_SLEEP RERUN_FAILURES FAILED_URLS_LOG TAKE_SCREENSHOTS GENERATE_PDF <<< "$(
-  python -c "import test_profit_loss_pages as m; print(m.WORKERS, m.SLEEP_INTERVAL, m.URLS_BEFORE_SLEEP, m.RERUN_FAILURES, m.FAILED_URLS_LOG, m.TAKE_SCREENSHOTS, m.GENERATE_PDF)"
+read -r WORKERS SLEEP_INTERVAL URLS_BEFORE_SLEEP RERUN_FAILURES FAILED_URLS_LOG <<< "$(
+  python -c "import test_balance_sheet_pages as m; print(m.WORKERS, m.SLEEP_INTERVAL, m.URLS_BEFORE_SLEEP, m.RERUN_FAILURES, m.FAILED_URLS_LOG)"
 )"
 
 if [[ "${WORKERS}" == "auto" ]]; then
@@ -35,18 +34,16 @@ if [[ "${PER_WORKER_BATCH}" -lt 1 ]]; then
 fi
 
 echo ""
-echo "Running Profit & Loss page test suite..."
+echo "Running Balance Sheet page test suite..."
 echo "  URLs file : ${URLS_FILE:-url.csv}"
 echo "  Workers   : ${WORKERS} (${EFFECTIVE_WORKERS} effective)"
 echo "  Sleep     : ${SLEEP_INTERVAL}s every ${URLS_BEFORE_SLEEP} URLs total (~${PER_WORKER_BATCH} per worker)"
 echo "  Re-run    : ${RERUN_FAILURES} retry round(s) for failed URLs (0 = off)"
-echo "  Screenshots: ${TAKE_SCREENSHOTS} (False = much faster on large runs)"
-echo "  PDF report : ${GENERATE_PDF}"
 echo "  Failures  : ${FAILED_URLS_LOG} (live url + section)"
-echo "  (all from test_profit_loss_pages.py)"
+echo "  (all from test_balance_sheet_pages.py)"
 echo ""
 
-PYTEST_ARGS=(test_profit_loss_pages.py -v --tb=short)
+PYTEST_ARGS=(test_balance_sheet_pages.py -v --tb=short)
 
 if [[ "${WORKERS}" != "1" ]]; then
   PYTEST_ARGS+=(-n "${WORKERS}" --dist loadscope)
@@ -97,6 +94,6 @@ fi
 rm -f retry_urls.csv
 
 echo ""
-echo "Done. Open Marcom_SEO_Report.html or Marcom_SEO_Report.pdf."
+echo "Done. Open Marcom_SEO_Report.html in your browser."
 
 exit "${pytest_exit:-0}"

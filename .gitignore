@@ -30,6 +30,8 @@ retry_urls.csv
 failed-urls.csv
 failed_urls.csv
 report_records.json
+Marcom_SEO_Report.pdf
+**/Marcom_SEO_Report.pdf
 good_urls_temp.csv
 urls_all.csv
 *.log

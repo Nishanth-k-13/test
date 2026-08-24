@@ -1,4 +1,4 @@
-"""Pytest hooks — collect results and emit Profit & Loss HTML report."""
+"""Pytest hooks — collect results and emit Balance Sheet HTML report."""
 
 from __future__ import annotations
 
@@ -15,41 +15,32 @@ import pytest
 
 from report_generator import _format_range, generate_report
 
-TEST_CLASS = "tests.MarcomSeoProfitLossTest"
+TEST_CLASS = "tests.MarcomSeoBalanceSheetTest"
 REPORT_RECORDS_FILE = Path(__file__).with_name("report_records.json")
 RETRY_URLS_FILE = Path(__file__).with_name("retry_urls.csv")
 
 
 def _failed_urls_log_path() -> Path:
     try:
-        import test_profit_loss_pages as suite
+        import test_balance_sheet_pages as suite
 
         name = getattr(suite, "FAILED_URLS_LOG", "failed-urls.csv")
     except Exception:
         name = os.getenv("FAILED_URLS_LOG", "failed-urls.csv")
     return Path(__file__).with_name(name)
 
-
-def _pdf_enabled() -> bool:
-    try:
-        import test_profit_loss_pages as suite
-
-        return bool(getattr(suite, "GENERATE_PDF", False))
-    except Exception:
-        return os.getenv("GENERATE_PDF", "").strip().lower() in {"1", "true", "yes"}
-
 SECTION_META: dict[str, dict[str, str]] = {
     "test_Section_1_Header_and_Meta": {
         "suite": "Header and Meta",
         "desc": "Confirms page title, meta description, and H1 tag",
         "steps": "Load page → Validate title/meta/H1 → Capture screenshot",
-        "objective": "Header and Meta validation for profit-loss leaf pages",
+        "objective": "Header and Meta validation for balance-sheet leaf pages",
     },
     "test_Section_2_Analytics_Tags": {
         "suite": "Analytics Tags",
         "desc": "Confirms GA/GTM analytics tags are present",
         "steps": "Inspect page HTML → Assert GTM/GA scripts exist",
-        "objective": "Analytics Tags audit for profit-loss leaf pages",
+        "objective": "Analytics Tags audit for balance-sheet leaf pages",
     },
     "test_Section_3_Graph_and_Chart": {
         "suite": "Graph and Chart",
@@ -59,7 +50,7 @@ SECTION_META: dict[str, dict[str, str]] = {
     },
     "test_Section_4_Content_Tabs": {
         "suite": "Content Tabs",
-        "desc": "Confirms Overview/Profit & Loss/Fundamentals and FAQ tabs",
+        "desc": "Confirms Overview/Balance Sheet/Fundamentals and FAQ tabs",
         "steps": "Find tab labels → Validate FAQ tab",
         "objective": "Content Tabs navigation validation",
     },
@@ -75,23 +66,23 @@ SECTION_META: dict[str, dict[str, str]] = {
         "steps": "Locate #stk-fund-fin-ovw → Validate growth cards with percentages",
         "objective": "Financial Overview cards validation",
     },
-    "test_Section_7_PnL_Statement_Structure": {
+    "test_Section_7_Balance_Sheet_Structure": {
+        "suite": "Balance Sheet Structure",
+        "desc": "Confirms Balance Sheet section, table, and sub-tabs",
+        "steps": "Locate #stk-fund-bs → Validate Consolidated/Standalone/Quarterly/Yearly tabs",
+        "objective": "Balance Sheet statement structure validation",
+    },
+    "test_Section_8_Balance_Sheet_Line_Items_and_Data": {
+        "suite": "Balance Sheet Line Items and Data",
+        "desc": "Confirms balance sheet line items and numeric table data",
+        "steps": "Validate Total Assets/Share Capital rows → Assert table cells contain numbers",
+        "objective": "Balance Sheet line items and data validation",
+    },
+    "test_Section_9_PnL_Statement_Structure": {
         "suite": "P&L Statement Structure",
-        "desc": "Confirms Profit & Loss section, table, and sub-tabs",
-        "steps": "Locate #stk-fund-pl → Validate Consolidated/Standalone/Quarterly/Yearly tabs",
+        "desc": "Confirms Profit & Loss section and table on balance-sheet leaf page",
+        "steps": "Locate #stk-fund-pl → Validate P&L table and sub-tabs",
         "objective": "P&L statement structure validation",
-    },
-    "test_Section_8_PnL_Line_Items_and_Data": {
-        "suite": "P&L Line Items and Data",
-        "desc": "Confirms P&L line items and numeric table data",
-        "steps": "Validate Net Revenue/Net Profit rows → Assert table cells contain numbers",
-        "objective": "P&L line items and data validation",
-    },
-    "test_Section_9_Balance_Sheet": {
-        "suite": "Balance Sheet",
-        "desc": "Confirms Balance Sheet section, table, and line items",
-        "steps": "Locate #stk-fund-bs → Validate Total Assets/Share Capital rows",
-        "objective": "Balance Sheet section validation",
     },
     "test_Section_10_Cash_Flow": {
         "suite": "Cash Flow",
@@ -328,12 +319,8 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     output = generate_report(
         records,
-        title="Test Execution Report — Profit & Loss Pages",
-        eyebrow="Automated Test Suite · Marcom SEO Pages Frontend · Profit & Loss",
+        title="Test Execution Report — Balance Sheet Pages",
+        eyebrow="Automated Test Suite · Marcom SEO Pages Frontend · Balance Sheet",
         subtitle=subtitle,
-        also_pdf=_pdf_enabled(),
     )
     print(f"\nHTML report generated: {output}")
-    pdf_output = output.with_suffix(".pdf")
-    if pdf_output.exists():
-        print(f"PDF report generated: {pdf_output}")

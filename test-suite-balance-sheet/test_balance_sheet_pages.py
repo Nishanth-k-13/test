@@ -1,5 +1,5 @@
 """
-Marcom SEO Pages Frontend — Profit & Loss leaf page UI test suite.
+Marcom SEO Pages Frontend — Balance Sheet leaf page UI test suite.
 
 Reads URLs from url.csv and validates 14 page sections per URL.
 Generates Marcom_SEO_Report.html via conftest.py hooks.
@@ -14,10 +14,10 @@ from __future__ import annotations
 import json
 import os
 import re
+from urllib.parse import urljoin
 
 import allure
 import pandas as pd
-from pandas.core.frame import T
 import pytest
 from playwright.sync_api import Page, expect, sync_playwright
 
@@ -25,18 +25,13 @@ URLS_FILE = os.getenv("URLS_FILE", "url.csv")
 SCREENSHOT_DIR = os.getenv("SCREENSHOT_DIR", "screenshots")
 
 
-SLEEP_INTERVAL = 0
+SLEEP_INTERVAL = 10
 URLS_BEFORE_SLEEP = 20
-WORKERS = "auto"
-RERUN_FAILURES = 0
-FAILED_URLS_LOG = "failed-urls.csv"
-TAKE_SCREENSHOTS = False 
-GENERATE_PDF = True 
-PAGE_WAIT_MS = 300  
+WORKERS = 4
+RERUN_FAILURES = 1
+FAILED_URLS_LOG = "failed-urls.csv"  # live log: url + section on each failure
 
 _worker_url_count = 0
-_playwright = None
-_browser = None
 
 
 def _effective_workers() -> int:
@@ -126,11 +121,7 @@ URLS = get_urls()
 
 
 def _base_stock_url(url: str) -> str:
-    return re.sub(r"/profit-loss/?$", "", url.rstrip("/").split("?")[0])
-
-
-def _fundamentals_url(url: str) -> str:
-    return f"{_base_stock_url(url)}?tabs=fundamentals"
+    return re.sub(r"/balance-sheet/?$", "", url.rstrip("/"))
 
 
 def _alternate_domain(url: str) -> str:
@@ -142,13 +133,8 @@ def _alternate_domain(url: str) -> str:
 
 
 def load_page(page: Page, url: str):
-    """Load fundamentals tab directly (fund data lives there, not on /profit-loss leaf)."""
-    candidates = [
-        _fundamentals_url(url),
-        url,
-        _alternate_domain(_fundamentals_url(url)),
-        _base_stock_url(url),
-    ]
+    """Load balance-sheet leaf URL; fall back to stock page if leaf 404s."""
+    candidates = [url, _alternate_domain(url), _base_stock_url(url), _base_stock_url(_alternate_domain(url))]
     seen: set[str] = set()
     last_response = None
 
@@ -157,9 +143,7 @@ def load_page(page: Page, url: str):
             continue
         seen.add(candidate)
         try:
-            response = page.goto(
-                candidate, wait_until="domcontentloaded", timeout=45_000
-            )
+            response = page.goto(candidate, wait_until="load", timeout=60_000)
             last_response = response
             if response and response.status == 200:
                 return response, candidate
@@ -173,53 +157,26 @@ def load_page(page: Page, url: str):
     return last_response, url
 
 
-def _blocked_resource(route) -> None:
-    if route.request.resource_type in {"image", "media", "font"}:
-        route.abort()
-    else:
-        route.continue_()
-
-
-def _get_browser():
-    global _playwright, _browser
-    if _browser is None:
-        _playwright = sync_playwright().start()
-        _browser = _playwright.chromium.launch(headless=os.getenv("HEADED", "") != "1")
-    return _browser
-
-
-def _shutdown_browser() -> None:
-    global _playwright, _browser
-    if _browser is not None:
-        try:
-            _browser.close()
-        except Exception:
-            pass
-        _browser = None
-    if _playwright is not None:
-        try:
-            _playwright.stop()
-        except Exception:
-            pass
-        _playwright = None
-
-
-def pytest_sessionfinish(session, exitstatus) -> None:
-    _shutdown_browser()
-
-
 @pytest.fixture(autouse=True, scope="class")
 def setup_browser(request, url: str):
     global _worker_url_count
     _worker_url_count += 1
 
-    browser = _get_browser()
+    playwright = sync_playwright().start()
+    browser = playwright.chromium.launch(headless=os.getenv("HEADED", "") != "1")
     page = browser.new_page()
-    page.route("**/*", _blocked_resource)
+
+    page.route(
+        "**/*",
+        lambda route: route.abort()
+        if route.request.resource_type in ["image", "media"]
+        else route.continue_(),
+    )
 
     def teardown() -> None:
         try:
-            page.close()
+            browser.close()
+            playwright.stop()
         except Exception:
             pass
 
@@ -243,8 +200,8 @@ def setup_browser(request, url: str):
     request.cls.status_code = response.status
     request.cls.loaded_url = loaded_url
 
-    page.wait_for_timeout(PAGE_WAIT_MS)
-    TestMarcomProfitLossPages.ensure_fundamentals_panel(page)
+    page.wait_for_timeout(1_500)
+    TestMarcomBalanceSheetPages.ensure_balance_sheet_panel(page)
 
     safe_url = loaded_url.replace("https://", "").replace("http://", "").replace("/", "_")
     request.cls.safe_url = safe_url
@@ -261,25 +218,41 @@ def setup_browser(request, url: str):
 
 @pytest.mark.parametrize("url", URLS, scope="class")
 @allure.feature("Marcom SEO Pages Frontend")
-@allure.story("Profit & Loss Leaf Page Verification")
-class TestMarcomProfitLossPages:
+@allure.story("Balance Sheet Leaf Page Verification")
+class TestMarcomBalanceSheetPages:
     screenshot_path = ""
 
     @staticmethod
-    def ensure_fundamentals_panel(page: Page) -> None:
-        """Ensure Fundamentals panel and P&L block are visible."""
-        if page.locator("#stk-fund-pl").count() > 0:
-            page.locator("#stk-fund-pl").first.scroll_into_view_if_needed()
+    def ensure_balance_sheet_panel(page: Page) -> None:
+        """Ensure Fundamentals panel and Balance Sheet block are visible.
+
+        Leaf URLs like /balance-sheet often render the Overview panel only.
+        Open ?tabs=fundamentals (via tab link or URL rewrite) to get #stk-fund-bs.
+        """
+        if page.locator("#stk-fund-bs").count() > 0:
+            page.locator("#stk-fund-bs").first.scroll_into_view_if_needed()
+            page.wait_for_timeout(500)
             return
 
-        page.wait_for_selector("#stk-fund-pl", timeout=20_000)
-        page.locator("#stk-fund-pl").first.scroll_into_view_if_needed()
+        fund_link = page.locator('a[href*="tabs=fundamentals"]').first
+        if fund_link.count():
+            href = fund_link.get_attribute("href")
+            if href:
+                page.goto(urljoin(page.url, href), wait_until="domcontentloaded", timeout=60_000)
+                page.wait_for_timeout(1_500)
+
+        if page.locator("#stk-fund-bs").count() == 0:
+            base = re.sub(r"/balance-sheet/?$", "", page.url.split("?")[0].rstrip("/"))
+            page.goto(f"{base}?tabs=fundamentals", wait_until="domcontentloaded", timeout=60_000)
+            page.wait_for_timeout(1_500)
+
+        page.wait_for_selector("#stk-fund-bs", timeout=30_000)
+        page.locator("#stk-fund-bs").first.scroll_into_view_if_needed()
+        page.wait_for_timeout(500)
 
     def _take_screenshot(
         self, name: str, locator_str: str | None = None, parent_levels: int = 0
     ) -> None:
-        if not TAKE_SCREENSHOTS:
-            return
         os.makedirs(SCREENSHOT_DIR, exist_ok=True)
         safe_name = name.replace(" ", "_").replace("/", "_")
         path = f"{SCREENSHOT_DIR}/screenshot_{self.safe_url}_{safe_name}.png"
@@ -308,7 +281,7 @@ class TestMarcomProfitLossPages:
         btn = section.get_by_text(tab_name, exact=True).first
         if btn.count():
             btn.click()
-            self.page.wait_for_timeout(250)
+            self.page.wait_for_timeout(600)
 
     def _count_numeric_cells(self, selector: str) -> int:
         return self.page.evaluate(
@@ -376,11 +349,11 @@ class TestMarcomProfitLossPages:
     def test_Section_4_Content_Tabs(self, url: str) -> None:
         self._take_screenshot("Tabs Section", "text=Overview", parent_levels=4)
         overview = self.page.locator("text=Overview")
-        pl_tab = self.page.locator("text=Profit & Loss")
+        bs_tab = self.page.locator("text=Balance Sheet")
         fundamentals = self.page.locator("text=Fundamentals")
         assert (
-            overview.count() > 0 or pl_tab.count() > 0 or fundamentals.count() > 0
-        ), "Main content tabs (Overview / Profit & Loss / Fundamentals) not found"
+            overview.count() > 0 or bs_tab.count() > 0 or fundamentals.count() > 0
+        ), "Main content tabs (Overview / Balance Sheet / Fundamentals) not found"
 
         faq_tab = self.page.locator("text=FAQ")
         assert faq_tab.count() > 0, "Content tab 'FAQ' is missing"
@@ -436,23 +409,54 @@ class TestMarcomProfitLossPages:
             )
             for card in cards_data:
                 assert card.get("metrics"), f"No metrics for card: {card.get('title')}"
-                # "-" / N/A is valid when a period has no data (common on live pages)
-                valid = 0
                 for value in card["metrics"].values():
-                    cleaned = (value or "").strip()
-                    if cleaned in {"-", "—", "–", "NA", "N/A", "n/a", ""}:
-                        continue
-                    assert "%" in cleaned, (
-                        f"Metric value missing % on {card.get('title')}: {value}"
-                    )
-                    valid += 1
-                assert valid >= 1, (
-                    f"No usable % metrics for card: {card.get('title')} "
-                    f"({card.get('metrics')})"
-                )
+                    assert "%" in value, f"Metric value missing %: {value}"
+
+    @allure.story("Balance Sheet Structure")
+    def test_Section_7_Balance_Sheet_Structure(self, url: str) -> None:
+        self.bs_section.first.scroll_into_view_if_needed()
+        self._take_screenshot("Balance Sheet", "#stk-fund-bs")
+        assert self.bs_section.count() > 0, "Balance Sheet section (#stk-fund-bs) not found"
+
+        bs_text = self._section_text(self.bs_section)
+        assert "Balance Sheet" in bs_text or "Balance sheet" in bs_text, (
+            "Balance Sheet heading not found"
+        )
+        assert self.bs_section.locator("table").count() > 0, "Balance Sheet table not found"
+
+        for tab_name in PL_SUB_TABS:
+            btn = self.bs_section.get_by_text(tab_name, exact=True).first
+            assert btn.count() > 0, f"Balance Sheet sub-tab missing: {tab_name}"
+            btn.click()
+            self.page.wait_for_timeout(600)
+            assert self.bs_section.locator("table").count() > 0, (
+                f"Balance Sheet table not visible after clicking {tab_name}"
+            )
+
+    @allure.story("Balance Sheet Line Items and Data")
+    def test_Section_8_Balance_Sheet_Line_Items_and_Data(self, url: str) -> None:
+        self._click_sub_tab(self.bs_section, "Consolidated")
+        bs_text = self._section_text(self.bs_section)
+
+        found = [item for item in BS_LINE_ITEMS if item in bs_text]
+        assert len(found) >= 1, f"Expected balance sheet line items, found: {found}"
+
+        numeric_count = self._count_numeric_cells("#stk-fund-bs")
+        assert numeric_count >= 3, (
+            f"Balance Sheet table has insufficient numeric cells: {numeric_count}"
+        )
+
+        for tab_name in ("Quarterly", "Yearly"):
+            self._click_sub_tab(self.bs_section, tab_name)
+            assert self._count_numeric_cells("#stk-fund-bs") > 0, (
+                f"Balance Sheet table empty after switching to {tab_name}"
+            )
+
+        self._take_screenshot("Balance Sheet Data Table", "#stk-fund-bs")
 
     @allure.story("P&L Statement Structure")
-    def test_Section_7_PnL_Statement_Structure(self, url: str) -> None:
+    def test_Section_9_PnL_Statement_Structure(self, url: str) -> None:
+        self.pl_section.first.scroll_into_view_if_needed()
         self._take_screenshot("PnL Statement", "#stk-fund-pl")
         assert self.pl_section.count() > 0, "Profit & Loss section (#stk-fund-pl) not found"
 
@@ -464,64 +468,12 @@ class TestMarcomProfitLossPages:
 
         for tab_name in PL_SUB_TABS:
             btn = self.pl_section.get_by_text(tab_name, exact=True).first
-            assert btn.count() > 0, f"P&L sub-tab missing: {tab_name}"
-            btn.click()
-            self.page.wait_for_timeout(250)
-            assert self.pl_section.locator("table").count() > 0, (
-                f"P&L table not visible after clicking {tab_name}"
-            )
-
-    @allure.story("P&L Line Items and Data")
-    def test_Section_8_PnL_Line_Items_and_Data(self, url: str) -> None:
-        # Prefer Consolidated; fall back to Standalone when consol. data is sparse
-        for tab_name in ("Consolidated", "Standalone"):
-            self._click_sub_tab(self.pl_section, tab_name)
-            pl_text = self._section_text(self.pl_section).lower()
-            found_items = [item for item in PL_LINE_ITEMS if item.lower() in pl_text]
-            if len(found_items) >= 2 and self._count_numeric_cells("#stk-fund-pl") >= 5:
-                break
-        else:
-            found_items = [
-                item
-                for item in PL_LINE_ITEMS
-                if item.lower() in self._section_text(self.pl_section).lower()
-            ]
-            assert len(found_items) >= 2, f"Expected P&L line items, found: {found_items}"
-            assert self._count_numeric_cells("#stk-fund-pl") >= 5, (
-                f"P&L table has too few numeric cells: {self._count_numeric_cells('#stk-fund-pl')}"
-            )
-
-        for tab_name in ("Quarterly", "Yearly"):
-            self._click_sub_tab(self.pl_section, tab_name)
-            assert self._count_numeric_cells("#stk-fund-pl") > 0, (
-                f"P&L table empty after switching to {tab_name}"
-            )
-
-        self._take_screenshot("PnL Data Table", "#stk-fund-pl")
-
-    @allure.story("Balance Sheet")
-    def test_Section_9_Balance_Sheet(self, url: str) -> None:
-        self.bs_section.first.scroll_into_view_if_needed()
-        self._take_screenshot("Balance Sheet", "#stk-fund-bs")
-        assert self.bs_section.count() > 0, "Balance Sheet section (#stk-fund-bs) not found"
-
-        bs_text = self._section_text(self.bs_section)
-        assert "Balance Sheet" in bs_text or "Balance sheet" in bs_text, (
-            "Balance Sheet heading not found"
-        )
-        assert self.bs_section.locator("table").count() > 0, "Balance Sheet table not found"
-
-        found = [item for item in BS_LINE_ITEMS if item in bs_text]
-        assert len(found) >= 1, f"Expected balance sheet line items, found: {found}"
-
-        for tab_name in PL_SUB_TABS:
-            btn = self.bs_section.get_by_text(tab_name, exact=True).first
             if btn.count():
                 btn.click()
-                self.page.wait_for_timeout(250)
+                self.page.wait_for_timeout(400)
 
-        assert self._count_numeric_cells("#stk-fund-bs") >= 3, (
-            "Balance Sheet table has insufficient numeric data"
+        assert self._count_numeric_cells("#stk-fund-pl") >= 3, (
+            "P&L table has insufficient numeric data"
         )
 
     @allure.story("Cash Flow")
@@ -564,7 +516,7 @@ class TestMarcomProfitLossPages:
             btn = self.ratios_section.get_by_text(cat, exact=False).first
             if btn.count():
                 btn.click()
-                self.page.wait_for_timeout(250)
+                self.page.wait_for_timeout(400)
 
         assert self._count_numeric_cells("#stk-fund-ratios") >= 2, (
             "Fundamental Ratios table has insufficient numeric data"
@@ -588,7 +540,7 @@ class TestMarcomProfitLossPages:
             btn = self.peer_section.get_by_text(tab_name, exact=True).first
             if btn.count():
                 btn.click()
-                self.page.wait_for_timeout(300)
+                self.page.wait_for_timeout(500)
 
         peer_rows = self.peer_section.locator(".seo-table-row-hover").count()
         assert peer_rows >= 2, f"Peer comparison table has too few rows: {peer_rows}"
