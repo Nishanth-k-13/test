@@ -43,6 +43,7 @@ echo "  Re-run    : ${RERUN_FAILURES} retry round(s) for failed URLs (0 = off)"
 echo "  Screenshots: ${TAKE_SCREENSHOTS} (False = much faster on large runs)"
 echo "  PDF report : ${GENERATE_PDF}"
 echo "  Failures  : ${FAILED_URLS_LOG} (live url + section)"
+echo "  Progress  : url-progress.txt (URLs completed / total)"
 echo "  (all from test_profit_loss_pages.py)"
 echo ""
 
@@ -57,7 +58,7 @@ export FAILED_URLS_LOG="${FAILED_URLS_LOG}"
 ORIGINAL_URLS_FILE="${URLS_FILE:-url.csv}"
 export URLS_FILE="${ORIGINAL_URLS_FILE}"
 
-rm -f "${FAILED_URLS_LOG}" report_records.json retry_urls.csv
+rm -f "${FAILED_URLS_LOG}" report_records.json retry_urls.csv url-progress.txt
 unset MERGE_REPORT_RECORDS
 
 retry_round=0

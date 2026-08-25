@@ -17,7 +17,6 @@ import re
 
 import allure
 import pandas as pd
-from pandas.core.frame import T
 import pytest
 from playwright.sync_api import Page, expect, sync_playwright
 
@@ -30,6 +29,7 @@ URLS_BEFORE_SLEEP = 20
 WORKERS = "auto"
 RERUN_FAILURES = 0
 FAILED_URLS_LOG = "failed-urls.csv"
+URL_PROGRESS_LOG = "url-progress.txt"  # live: URLs completed / total
 TAKE_SCREENSHOTS = False 
 GENERATE_PDF = True 
 PAGE_WAIT_MS = 300  

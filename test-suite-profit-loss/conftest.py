@@ -128,17 +128,87 @@ SECTION_META: dict[str, dict[str, str]] = {
 _collected_records: list[dict[str, Any]] = []
 _record_counter = 0
 _session_start = 0.0
+_completed_urls: set[str] = set()
+_total_urls = 0
+
+
+def _progress_log_path() -> Path:
+    try:
+        import test_profit_loss_pages as suite
+
+        name = getattr(suite, "URL_PROGRESS_LOG", "url-progress.txt")
+    except Exception:
+        name = os.getenv("URL_PROGRESS_LOG", "url-progress.txt")
+    return Path(__file__).with_name(name)
+
+
+def _total_url_count() -> int:
+    try:
+        import test_profit_loss_pages as suite
+
+        return len(suite.URLS)
+    except Exception:
+        return 0
+
+
+def _count_url_done(url: str) -> None:
+    global _completed_urls, _total_urls
+
+    if not url or url in _completed_urls:
+        return
+
+    _completed_urls.add(url)
+    done = len(_completed_urls)
+    total = _total_urls or done
+    pct = (done / total * 100) if total else 0.0
+    line = f"URLs completed: {done} / {total} ({pct:.1f}%)"
+    detail = f"Last: {url}"
+
+    print(f"\n[Progress] {line}\n           {detail}", flush=True)
+
+    progress_path = _progress_log_path()
+    progress_path.write_text(
+        "\n".join([
+            line,
+            detail,
+            f"Updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
+        ])
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _maybe_count_url_done(report: pytest.TestReport, method: str, url: str) -> None:
+    if not url or url in _completed_urls:
+        return
+
+    if method == "test_Section_14_Footer_Components" and report.when == "call":
+        _count_url_done(url)
+    elif report.when == "setup" and report.failed:
+        _count_url_done(url)
 
 
 def pytest_sessionstart(session: pytest.Session) -> None:
-    global _session_start
+    global _session_start, _total_urls, _completed_urls
     _session_start = time.time()
 
     if hasattr(session.config, "workerinput"):
         return
 
+    _completed_urls = set()
+    _total_urls = _total_url_count()
+
     log_path = _failed_urls_log_path()
     log_path.write_text("url,section,time\n", encoding="utf-8")
+
+    progress_path = _progress_log_path()
+    progress_path.write_text(
+        f"URLs completed: 0 / {_total_urls} (0.0%)\n"
+        f"Last: —\n"
+        f"Updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n",
+        encoding="utf-8",
+    )
+    print(f"\n[Progress] Testing {_total_urls} URLs — watch {progress_path.name} for live count\n", flush=True)
 
 
 def _extract_url(nodeid: str) -> str:
@@ -246,6 +316,10 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
     if record.get("status") == "failed" and record.get("url"):
         _append_live_failure(record)
 
+    method = record.get("method", report.nodeid.split("::")[-1].split("[")[0])
+    url = record.get("url", _extract_url(report.nodeid))
+    _maybe_count_url_done(report, method, url)
+
 
 def _append_live_failure(record: dict[str, Any]) -> None:
     """Append url + section to failed-urls.csv as soon as a test fails."""
@@ -337,3 +411,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     pdf_output = output.with_suffix(".pdf")
     if pdf_output.exists():
         print(f"PDF report generated: {pdf_output}")
+
+    progress_path = _progress_log_path()
+    if progress_path.exists():
+        print(f"URL progress: {len(_completed_urls)} / {_total_urls} — see {progress_path.name}")

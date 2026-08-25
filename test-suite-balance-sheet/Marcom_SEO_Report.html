@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Execution Report — Full Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F6F8;
+    --surface: #FFFFFF;
+    --border: #E3E6EB;
+    --border-soft: #ECEEF2;
+    --text: #161B22;
+    --text-secondary: #5C6570;
+    --text-faint: #8B93A1;
+    --navy: #1F3A5F;
+    --navy-soft: #EAF0F7;
+    --pass: #1A7F5A;
+    --pass-soft: #E6F5EE;
+    --fail: #C1362B;
+    --fail-soft: #FCEBEA;
+    --skip: #B7791F;
+    --skip-soft: #FBF1DD;
+    --other: #6C5CE7;
+    --other-soft: #EEEBFC;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(20,24,31,0.04), 0 1px 12px rgba(20,24,31,0.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.45;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  .display{font-family:'Space Grotesk', sans-serif;}
+
+  header.report-header{
+    background: var(--navy);
+    color: #fff;
+    padding: 36px 40px 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  header.report-header::after{
+    content:"";
+    position:absolute;
+    top:-40%; right:-8%;
+    width:420px; height:420px;
+    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 70%);
+  }
+  .header-inner{max-width:1320px; margin:0 auto; position:relative; z-index:1;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom:10px;
+  }
+  h1.title{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:32px;
+    font-weight:700;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{
+    color: rgba(255,255,255,0.72);
+    font-size:14px;
+    margin:0;
+  }
+  .subtitle span{color:#fff; font-weight:500;}
+  .container{max-width:1320px; margin:0 auto; padding: 28px 40px 60px;}
+  .summary-grid{
+    display:grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap:14px;
+    margin-top:-46px;
+    position:relative;
+    z-index:2;
+  }
+  .card{
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    padding:18px 18px 16px;
+    box-shadow: var(--shadow);
+  }
+  .card .label{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color: var(--text-faint);
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .card .value{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px;
+    font-weight:700;
+    color: var(--text);
+    line-height:1;
+  }
+  .card .value.pass{color:var(--pass);}
+  .card .value.fail{color:var(--fail);}
+  .card .sub{font-size:12px; color:var(--text-faint); margin-top:6px;}
+  .card .bar-track{
+    margin-top:10px; height:5px; border-radius:3px; background:var(--border-soft); overflow:hidden;
+  }
+  .card .bar-fill{height:100%; background:var(--pass); border-radius:3px;}
+  .section-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:16px;
+    font-weight:600;
+    margin: 34px 0 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color: var(--text);
+  }
+  .section-title .count-chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: var(--text-faint);
+    font-weight:500;
+    background: var(--border-soft);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .suite-panel{
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .suite-row{
+    display:grid;
+    grid-template-columns: 260px 1fr 130px;
+    align-items:center;
+    gap:16px;
+    padding: 9px 0;
+    border-bottom:1px solid var(--border-soft);
+    font-size:13px;
+  }
+  .suite-row:last-child{border-bottom:none;}
+  .suite-name{color:var(--text); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .suite-bar-track{
+    height:16px; background:var(--border-soft); border-radius:4px; overflow:hidden; display:flex;
+  }
+  .suite-bar-seg{height:100%;}
+  .suite-count{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--text-secondary); text-align:right;
+  }
+  .suite-count b{color:var(--text); font-weight:600;}
+  .filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .filters input[type="text"]{
+    flex: 1 1 220px;
+    min-width:180px;
+    padding: 9px 12px;
+    border:1px solid var(--border);
+    border-radius: 7px;
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .filters select{
+    padding: 9px 10px;
+    border:1px solid var(--border);
+    border-radius: 7px;
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+    background: var(--bg);
+    color: var(--text);
+    max-width:220px;
+  }
+  .filters input:focus, .filters select:focus{outline:2px solid var(--navy); outline-offset:1px;}
+  .filters .reset-btn{
+    padding:9px 14px;
+    border-radius:7px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .filters .reset-btn:hover{background:var(--bg);}
+  .table-wrapper{
+    margin-top: 20px;
+    overflow-x: auto;
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  #reportTable{width:100%; border-collapse:collapse; font-size:12.5px;}
+  #reportTable thead{background:var(--navy-soft); color:var(--navy); font-weight:600;}
+  #reportTable th{padding:12px 10px; text-align:left; border-bottom:1px solid var(--border); cursor:pointer; white-space:nowrap; user-select:none;}
+  #reportTable th:hover{background: var(--border-soft);}
+  #reportTable td{padding:10px; border-bottom:1px solid var(--border-soft);}
+  #reportTable tbody tr:hover{background:var(--navy-soft);}
+  #reportTable tbody tr.expanded{background:var(--navy-soft);}
+  .col-num{font-family:'IBM Plex Mono'; color:var(--text-faint); width:50px; text-align:center;}
+  .col-class{font-family:'IBM Plex Mono'; font-size:11px; color:var(--text-secondary);}
+  .col-method{font-weight:500;}
+  .col-suite{font-size:11px; color:var(--text-faint);}
+  .col-url{font-size:11px;}
+  .col-url a{color:var(--navy); text-decoration:none;}
+  .col-url a:hover{text-decoration:underline;}
+  .col-row{font-family:'IBM Plex Mono'; color:var(--text-faint); font-size:11px; text-align:center;}
+  .col-text{font-size:11px; color:var(--text-secondary); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .col-time{font-family:'IBM Plex Mono'; font-size:11px; color:var(--text-faint);}
+  .col-dur{font-family:'IBM Plex Mono'; font-size:11px; color:var(--text-secondary); text-align:right; width:70px;}
+  .fail-cell{color:var(--fail);}
+  .status-badge{display:inline-block; padding:3px 10px; border-radius:12px; font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;}
+  .status-badge.passed{background:var(--pass-soft); color:var(--pass);}
+  .status-badge.failed{background:var(--fail-soft); color:var(--fail);}
+  .status-badge.skipped{background:var(--skip-soft); color:var(--skip);}
+  .status-badge.other{background:var(--other-soft); color:var(--other);}
+  .detail-row td{background:var(--bg); padding:20px; border-bottom:none;}
+  .detail-grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px;}
+  .detail-block{display:flex; flex-direction:column;}
+  .detail-block .k{font-size:11px; text-transform:uppercase; color:var(--text-faint); font-weight:600; letter-spacing:0.05em; margin-bottom:6px;}
+  .detail-block .v{font-size:12px; color:var(--text); word-break:break-word; font-family:'IBM Plex Mono', monospace;}
+  .detail-block .fail-text{color:var(--fail); font-weight:500;}
+  .pagination{display:flex; justify-content:space-between; align-items:center; margin-top:16px; font-size:13px;}
+  .page-info{color:var(--text-secondary);}
+  .page-controls{display:flex; gap:8px;}
+  .page-controls button{padding:7px 12px; border:1px solid var(--border); background:#fff; border-radius:6px; color:var(--text-secondary); font-size:12px; cursor:pointer; font-weight:500;}
+  .page-controls button:hover:not(:disabled){background:var(--bg);}
+  .page-controls button:disabled{opacity:0.4; cursor:not-allowed;}
+  .page-size-control{display:flex; gap:8px; align-items:center;}
+  .page-size-control select{padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px;}
+  @media (max-width: 1024px) {.summary-grid{grid-template-columns: repeat(3, 1fr);} .suite-row{grid-template-columns: 180px 1fr 100px;}}
+  @media (max-width: 768px) {.summary-grid{grid-template-columns: repeat(2, 1fr);} .filters{flex-direction:column;} .filters input, .filters select{width:100%;}}
+</style>
+</head>
+<body>
+<header class="report-header">
+  <div class="header-inner">
+    <div class="eyebrow">Automated Test Suite · Marcom SEO Pages Frontend · Balance Sheet</div>
+    <h1 class="title">Test Execution Report — Balance Sheet Pages</h1>
+    <p class="subtitle">Execution Range: <span id="hdrRange">2026-08-25 10:20:13 UTC → 2026-08-25 10:20:13 UTC</span> &middot; <span>1 test class</span> &middot; 1 target URLs &middot; 6s total runtime &middot; 0 passed / 1 failed / 0 skipped</p>
+  </div>
+</header>
+<div class="container">
+  <div class="summary-grid" id="summaryGrid"></div>
+  <div class="section-title">Test Suite Breakdown <span class="count-chip" id="suiteChip">—</span></div>
+  <div class="suite-panel" id="suitePanel"></div>
+  <div class="section-title">Detailed Results <span class="count-chip" id="tableChip">—</span></div>
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="Search by method, class, URL...">
+    <select id="suiteFilter"><option value="">All Suites</option></select>
+    <select id="statusFilter"><option value="">All Statuses</option></select>
+    <select id="classFilter"><option value="">All Classes</option></select>
+    <button class="reset-btn" id="resetBtn">Reset</button>
+  </div>
+  <div class="table-wrapper">
+    <table id="reportTable">
+      <thead>
+        <tr>
+          <th data-key="n" style="width:50px;">#</th>
+          <th data-key="cls">Class</th>
+          <th data-key="method">Method</th>
+          <th data-key="suite">Suite</th>
+          <th data-key="url">Target URL</th>
+          <th data-key="row">Row</th>
+          <th data-key="status">Status</th>
+          <th data-key="desc">Description</th>
+          <th data-key="steps">Steps</th>
+          <th data-key="detail">Details</th>
+          <th data-key="fail">Failure</th>
+          <th data-key="start">Start Time</th>
+          <th data-key="dur" style="width:70px;">Duration</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <div class="page-info"><span id="resultCount">—</span> results • <span id="pageInfo">—</span></div>
+    <div class="page-controls">
+      <button id="firstPage">First</button>
+      <button id="prevPage">← Previous</button>
+      <button id="nextPage">Next →</button>
+      <button id="lastPage">Last</button>
+    </div>
+    <div class="page-size-control">
+      <label for="pageSizeSelect">Rows per page:</label>
+      <select id="pageSizeSelect">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const RAW = [{"cls": "tests.MarcomSeoBalanceSheetTest", "method": "test_Section_8_Balance_Sheet_Line_Items_and_Data", "suite": "Balance Sheet Line Items and Data", "url": "https://fyers.co.in/stocks/bajaj-consumer-care-ltd/balance-sheet", "row": "", "status": "failed", "desc": "Confirms balance sheet line items and numeric table data", "steps": "Validate Total Assets/Share Capital rows → Assert table cells contain numbers", "detail": "Objective: Balance Sheet line items and data validation\n\nWhat This Test Verifies:\n- Confirms balance sheet line items and numeric table data\n\nSteps (as executed):\nValidate Total Assets/Share Capital rows → Assert table cells contain numbers\n\nResult: FAILED\n\nFailure Details:\ntest_balance_sheet_pages.py:400: in test_Section_8_Balance_Sheet_Line_Items_and_Data\n    assert len(found) >= 1, f\"Expected balance sheet line items, found: {found}\"\nE   AssertionError: Expected balance sheet line items, found: []\nE   assert 0 >= 1\nE    +  where 0 = len([])", "fail": "test_balance_sheet_pages.py:400: in test_Section_8_Balance_Sheet_Line_Items_and_Data\n    assert len(found) >= 1, f\"Expected balance sheet line items, found: {found}\"\nE   AssertionError: Expected balance sheet line items, found: []\nE   assert 0 >= 1\nE    +  where 0 = len([])", "start": "2026-08-25 10:20:13 UTC", "dur": 0.79, "n": 1}];
+  const statusClass = s => ({passed:'passed', failed:'failed', skipped:'skipped'}[s] || 'other');
+  const total = RAW.length;
+  const passed = RAW.filter(d=>d.status==='passed').length;
+  const failed = RAW.filter(d=>d.status==='failed').length;
+  const skipped = RAW.filter(d=>d.status==='skipped').length;
+  const otherCount = RAW.filter(d=>!['passed','failed','skipped'].includes(d.status)).length;
+  const passRate = (passed/total*100).toFixed(1);
+  const classes = new Set(RAW.map(d=>d.cls).filter(Boolean));
+  const suitesSet = new Set(RAW.map(d=>d.suite).filter(Boolean));
+  const statusCounts = {};
+  RAW.forEach(d=>{ statusCounts[d.status] = (statusCounts[d.status]||0) + 1; });
+  const totalDurSec = RAW.reduce((a,d)=>a+d.dur, 0);
+  const starts = RAW.map(d=>d.start).filter(Boolean).sort();
+  const fmtDuration = sec => {
+    const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = Math.floor(sec%60);
+    const parts = []; if(h) parts.push(h+'h'); if(m) parts.push(m+'m'); if(s||!parts.length) parts.push(s+'s');
+    return parts.join(' ');
+  };
+  const fmtTime = t => t ? t.replace(' UTC','').replace(/^\d{4}-\d{2}-\d{2} /, '') : '—';
+  document.getElementById('hdrRange').textContent = starts.length ?
+    `${starts[0].replace(' UTC',' UTC')} → ${starts[starts.length-1].replace(' UTC',' UTC')}` : '—';
+  const summaryGrid = document.getElementById('summaryGrid');
+  const cards = [
+    {label:'Total tests', value: total.toLocaleString(), sub:`${classes.size} test classes`},
+    {label:'Passed', value: passed.toLocaleString(), cls:'pass', sub:`${passRate}% pass rate`, bar:passRate},
+    {label:'Failed', value: failed.toLocaleString(), cls: failed>0 ? 'fail':'', sub: failed>0 ? `${((failed/total)*100).toFixed(1)}% of runs` : 'None recorded'},
+    {label:'Skipped / other', value:(skipped+otherCount).toLocaleString(), sub: (skipped+otherCount)>0 ? `${skipped} skipped, ${otherCount} other` : 'None recorded'},
+    {label:'Total run time', value: fmtDuration(totalDurSec), sub:`avg ${ (totalDurSec/total).toFixed(1) }s / test`},
+    {label:'Suites covered', value: suitesSet.size, sub:`${new Set(RAW.map(d=>d.url)).size} target URLs`},
+  ];
+  summaryGrid.innerHTML = cards.map(c => `<div class="card"><div class="label">${c.label}</div><div class="value ${c.cls||''}">${c.value}</div><div class="sub">${c.sub}</div>${c.bar!==undefined ? `<div class="bar-track"><div class="bar-fill" style="width:${c.bar}%"></div></div>` : ''}</div>`).join('');
+  const suiteAgg = {};
+  RAW.forEach(d=>{
+    if(!suiteAgg[d.suite]) suiteAgg[d.suite] = {total:0, passed:0, failed:0, other:0};
+    const a = suiteAgg[d.suite]; a.total++;
+    if(d.status==='passed') a.passed++; else if(d.status==='failed') a.failed++; else a.other++;
+  });
+  const suiteEntries = Object.entries(suiteAgg).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('suiteChip').textContent = `${suiteEntries.length} suites`;
+  const maxSuiteTotal = Math.max(...suiteEntries.map(e=>e[1].total));
+  document.getElementById('suitePanel').innerHTML = suiteEntries.map(([name, a])=>{
+    const w = (a.total/maxSuiteTotal*100).toFixed(1);
+    const pPct = (a.passed/a.total*100).toFixed(1);
+    const fPct = (a.failed/a.total*100).toFixed(1);
+    const oPct = (a.other/a.total*100).toFixed(1);
+    return `<div class="suite-row"><div class="suite-name" title="${name}">${name}</div><div class="suite-bar-track" style="width:${w}%"><div class="suite-bar-seg" style="width:${pPct}%; background:var(--pass)"></div><div class="suite-bar-seg" style="width:${fPct}%; background:var(--fail)"></div><div class="suite-bar-seg" style="width:${oPct}%; background:var(--skip)"></div></div><div class="suite-count"><b>${a.total}</b> tests${a.failed>0 ? ` &middot; <span style="color:var(--fail)">${a.failed} failed</span>`:''}</div></div>`;
+  }).join('');
+  const suiteFilter = document.getElementById('suiteFilter');
+  [...suitesSet].sort().forEach(s=>{ const o = document.createElement('option'); o.value=s; o.textContent=s; suiteFilter.appendChild(o); });
+  const statusFilter = document.getElementById('statusFilter');
+  Object.keys(statusCounts).sort().forEach(s=>{ const o = document.createElement('option'); o.value=s; o.textContent = s.charAt(0).toUpperCase()+s.slice(1)+` (${statusCounts[s]})`; statusFilter.appendChild(o); });
+  const classFilter = document.getElementById('classFilter');
+  [...classes].sort().forEach(c=>{ const o = document.createElement('option'); o.value=c; o.textContent=c; classFilter.appendChild(o); });
+  let filtered = RAW.slice(), sortKey = 'n', sortDir = 1, page = 1, pageSize = 50, expandedRow = null;
+  const tableBody = document.getElementById('tableBody');
+  const searchInput = document.getElementById('searchInput');
+  const resultCount = document.getElementById('resultCount');
+  const pageInfo = document.getElementById('pageInfo');
+  document.getElementById('tableChip').textContent = `${total.toLocaleString()} results`;
+  function applyFilters(){
+    const q = searchInput.value.trim().toLowerCase();
+    filtered = RAW.filter(d=>{
+      if(suiteFilter.value && d.suite !== suiteFilter.value) return false;
+      if(statusFilter.value && d.status !== statusFilter.value) return false;
+      if(classFilter.value && d.cls !== classFilter.value) return false;
+      if(q && !(d.method+' '+d.cls+' '+d.url+' '+d.suite).toLowerCase().includes(q)) return false;
+      return true;
+    });
+    sortData(); page = 1; render();
+  }
+  function sortData(){
+    filtered.sort((a,b)=>{
+      let av = a[sortKey], bv = b[sortKey];
+      if(typeof av === 'string') av = av.toLowerCase();
+      if(typeof bv === 'string') bv = bv.toLowerCase();
+      if(av < bv) return -1*sortDir; if(av > bv) return 1*sortDir; return 0;
+    });
+  }
+  function render(){
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    if(page > totalPages) page = totalPages;
+    const startIdx = (page-1)*pageSize;
+    tableBody.innerHTML = filtered.slice(startIdx, startIdx+pageSize).map((d, i) => rowHtml(d, startIdx+i)).join('');
+    resultCount.textContent = `${filtered.length.toLocaleString()} / ${total.toLocaleString()} rows`;
+    pageInfo.textContent = `Page ${page} of ${totalPages}`;
+    document.getElementById('firstPage').disabled = page<=1;
+    document.getElementById('prevPage').disabled = page<=1;
+    document.getElementById('nextPage').disabled = page>=totalPages;
+    document.getElementById('lastPage').disabled = page>=totalPages;
+    tableBody.querySelectorAll('tr[data-idx]').forEach(tr=>{
+      tr.addEventListener('click', ()=>{ expandedRow = expandedRow === Number(tr.getAttribute('data-idx')) ? null : Number(tr.getAttribute('data-idx')); render(); });
+    });
+  }
+  function rowHtml(d, globalIdx){
+    const sc = statusClass(d.status), isExpanded = expandedRow === globalIdx;
+    let html = `<tr data-idx="${globalIdx}" class="${isExpanded ? 'expanded':''}"><td class="col-num">${d.n}</td><td class="col-class">${escapeHtml(d.cls)}</td><td class="col-method">${escapeHtml(d.method)}</td><td class="col-suite">${escapeHtml(d.suite)}</td><td class="col-url"><a href="${escapeHtml(d.url)}" target="_blank" rel="noopener">${escapeHtml(d.url)}</a></td><td class="col-row">${escapeHtml(d.row)}</td><td><span class="status-badge ${sc}">${escapeHtml(d.status)}</span></td><td class="col-text">${escapeHtml(d.desc||'—')}</td><td class="col-text">${escapeHtml(d.steps||'—')}</td><td class="col-text">${escapeHtml(d.detail||'—')}</td><td class="col-text fail-cell">${escapeHtml(d.fail||'—')}</td><td class="col-time">${fmtTime(d.start)}</td><td class="col-dur">${d.dur ? d.dur.toFixed(2)+'s' : '—'}</td></tr>`;
+    if(isExpanded) html += `<tr class="detail-row"><td colspan="13"><div class="detail-grid"><div class="detail-block"><div class="k">Description</div><div class="v">${escapeHtml(d.desc||'—')}</div></div><div class="detail-block"><div class="k">Test steps</div><div class="v">${escapeHtml(d.steps||'—')}</div></div><div class="detail-block"><div class="k">Detailed description</div><div class="v">${escapeHtml(d.detail||'—')}</div></div>${d.fail ? `<div class="detail-block"><div class="k">Failure message</div><div class="v fail-text">${escapeHtml(d.fail)}</div></div>` : ''}</div></td></tr>`;
+    return html;
+  }
+  function escapeHtml(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); }; }
+  searchInput.addEventListener('input', debounce(applyFilters, 180));
+  suiteFilter.addEventListener('change', applyFilters);
+  statusFilter.addEventListener('change', applyFilters);
+  classFilter.addEventListener('change', applyFilters);
+  document.getElementById('resetBtn').addEventListener('click', ()=>{ searchInput.value=''; suiteFilter.value=''; statusFilter.value=''; classFilter.value=''; applyFilters(); });
+  document.getElementById('pageSizeSelect').addEventListener('change', e=>{ pageSize = Number(e.target.value); page = 1; render(); });
+  document.getElementById('firstPage').addEventListener('click', ()=>{page=1; render();});
+  document.getElementById('prevPage').addEventListener('click', ()=>{page=Math.max(1,page-1); render();});
+  document.getElementById('nextPage').addEventListener('click', ()=>{page=page+1; render();});
+  document.getElementById('lastPage').addEventListener('click', ()=>{page=Math.ceil(filtered.length/pageSize); render();});
+  document.querySelectorAll('#reportTable thead th').forEach(th=>{
+    th.addEventListener('click', ()=>{ const key = th.getAttribute('data-key'); if(sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; } sortData(); page=1; render(); });
+  });
+  sortData(); render();
+})();
+</script>
+</body>
+</html>

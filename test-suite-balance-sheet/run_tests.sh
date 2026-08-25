@@ -95,5 +95,7 @@ rm -f retry_urls.csv
 
 echo ""
 echo "Done. Open Marcom_SEO_Report.html in your browser."
+echo "Generating PDF report..."
+python3 generate_pdf.py
 
 exit "${pytest_exit:-0}"

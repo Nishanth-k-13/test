@@ -29,6 +29,7 @@ seo_report.csv
 retry_urls.csv
 failed-urls.csv
 failed_urls.csv
+url-progress.txt
 report_records.json
 Marcom_SEO_Report.pdf
 **/Marcom_SEO_Report.pdf

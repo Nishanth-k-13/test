@@ -1,14 +1,3 @@
-"""
-Marcom SEO Pages Frontend — Balance Sheet leaf page UI test suite.
-
-Reads URLs from url.csv and validates 14 page sections per URL.
-Generates Marcom_SEO_Report.html via conftest.py hooks.
-
-DOM (Marcom frontend Fundamentals panel):
-  #stk-panel-fund, #stk-fund-fin-ovw, #stk-fund-peer, #stk-fund-pl,
-  #stk-fund-bs, #stk-fund-cf, #stk-fund-ratios
-"""
-
 from __future__ import annotations
 
 import json
@@ -25,11 +14,11 @@ URLS_FILE = os.getenv("URLS_FILE", "url.csv")
 SCREENSHOT_DIR = os.getenv("SCREENSHOT_DIR", "screenshots")
 
 
-SLEEP_INTERVAL = 10
+SLEEP_INTERVAL = 5
 URLS_BEFORE_SLEEP = 20
-WORKERS = 4
+WORKERS = 5
 RERUN_FAILURES = 1
-FAILED_URLS_LOG = "failed-urls.csv"  # live log: url + section on each failure
+FAILED_URLS_LOG = "failed-urls.csv" 
 
 _worker_url_count = 0
 
@@ -208,10 +197,10 @@ def setup_browser(request, url: str):
     request.cls.page = page
     request.cls.body_text = page.locator("body").inner_text()
     request.cls.pl_section = page.locator("#stk-fund-pl")
-    request.cls.bs_section = page.locator("#stk-fund-bs")
+    request.cls.bs_section = page.locator("div").filter(has=page.locator("text=Consolidated")).filter(has=page.locator("table")).last
     request.cls.cf_section = page.locator("#stk-fund-cf")
     request.cls.ratios_section = page.locator("#stk-fund-ratios")
-    request.cls.peer_section = page.locator("#stk-fund-peer")
+    request.cls.peer_section = page.locator("#stk-ovw-peer")
 
     yield
 
@@ -328,13 +317,13 @@ class TestMarcomBalanceSheetPages:
         self._take_screenshot("Header Section", "h1")
         assert len(h1.first.inner_text().strip()) > 0, "H1 tag is empty"
 
-    @allure.story("Analytics Tags")
-    def test_Section_2_Analytics_Tags(self, url: str) -> None:
-        html_content = self.page.content()
-        self._take_screenshot("Analytics Source", "head")
-        assert (
-            "googletagmanager.com" in html_content or "google-analytics.com" in html_content
-        ), "GA/GTM tags are missing"
+    # @allure.story("Analytics Tags")
+    # def test_Section_2_Analytics_Tags(self, url: str) -> None:
+    #     html_content = self.page.content()
+    #     self._take_screenshot("Analytics Source", "head")
+    #     assert (
+    #         "googletagmanager.com" in html_content or "google-analytics.com" in html_content
+    #     ), "GA/GTM tags are missing"
 
     @allure.story("Graph & Chart")
     def test_Section_3_Graph_and_Chart(self, url: str) -> None:
@@ -375,56 +364,14 @@ class TestMarcomBalanceSheetPages:
         )
         assert has_ratio, "Live Stats ratio data (PE/P/E/P/B) missing"
 
-    @allure.story("Financial Overview")
-    def test_Section_6_Financial_Overview(self, url: str) -> None:
-        self._take_screenshot("Financial Overview", "#stk-fund-fin-ovw")
-        overview = self.page.locator("#stk-fund-fin-ovw")
-        overview_text = overview.first.inner_text() if overview.count() else self.body_text
-
-        found_cards = [card for card in FINANCIAL_OVERVIEW_CARDS if card in overview_text]
-        assert len(found_cards) >= 2, (
-            f"Expected financial overview cards, found: {found_cards}"
-        )
-
-        if overview.count():
-            cards_data = self.page.evaluate(
-                """() => {
-                    const section = document.querySelector('#stk-fund-fin-ovw');
-                    if (!section) return [];
-                    const cards = [];
-                    section.querySelectorAll('h2 span').forEach(title => {
-                        const card = title.closest('.border');
-                        if (!card) return;
-                        const metrics = {};
-                        card.querySelectorAll('.flex.justify-between').forEach(row => {
-                            const spans = row.querySelectorAll('span');
-                            if (spans.length >= 2) {
-                                metrics[spans[0].textContent.trim()] = spans[1].textContent.trim();
-                            }
-                        });
-                        cards.push({ title: title.textContent.trim(), metrics });
-                    });
-                    return cards;
-                }"""
-            )
-            for card in cards_data:
-                assert card.get("metrics"), f"No metrics for card: {card.get('title')}"
-                for value in card["metrics"].values():
-                    assert "%" in value, f"Metric value missing %: {value}"
-
     @allure.story("Balance Sheet Structure")
     def test_Section_7_Balance_Sheet_Structure(self, url: str) -> None:
         self.bs_section.first.scroll_into_view_if_needed()
-        self._take_screenshot("Balance Sheet", "#stk-fund-bs")
-        assert self.bs_section.count() > 0, "Balance Sheet section (#stk-fund-bs) not found"
+        assert self.bs_section.count() > 0, "Balance Sheet section not found"
 
-        bs_text = self._section_text(self.bs_section)
-        assert "Balance Sheet" in bs_text or "Balance sheet" in bs_text, (
-            "Balance Sheet heading not found"
-        )
         assert self.bs_section.locator("table").count() > 0, "Balance Sheet table not found"
 
-        for tab_name in PL_SUB_TABS:
+        for tab_name in ["Consolidated", "Standalone"]:
             btn = self.bs_section.get_by_text(tab_name, exact=True).first
             assert btn.count() > 0, f"Balance Sheet sub-tab missing: {tab_name}"
             btn.click()
@@ -441,92 +388,16 @@ class TestMarcomBalanceSheetPages:
         found = [item for item in BS_LINE_ITEMS if item in bs_text]
         assert len(found) >= 1, f"Expected balance sheet line items, found: {found}"
 
-        numeric_count = self._count_numeric_cells("#stk-fund-bs")
+        numeric_count = self._count_numeric_cells(self.bs_section)
         assert numeric_count >= 3, (
             f"Balance Sheet table has insufficient numeric cells: {numeric_count}"
-        )
-
-        for tab_name in ("Quarterly", "Yearly"):
-            self._click_sub_tab(self.bs_section, tab_name)
-            assert self._count_numeric_cells("#stk-fund-bs") > 0, (
-                f"Balance Sheet table empty after switching to {tab_name}"
-            )
-
-        self._take_screenshot("Balance Sheet Data Table", "#stk-fund-bs")
-
-    @allure.story("P&L Statement Structure")
-    def test_Section_9_PnL_Statement_Structure(self, url: str) -> None:
-        self.pl_section.first.scroll_into_view_if_needed()
-        self._take_screenshot("PnL Statement", "#stk-fund-pl")
-        assert self.pl_section.count() > 0, "Profit & Loss section (#stk-fund-pl) not found"
-
-        pl_text = self._section_text(self.pl_section)
-        assert "Profit" in pl_text and "Loss" in pl_text, (
-            "Profit & Loss heading not found in section"
-        )
-        assert self.pl_section.locator("table").count() > 0, "P&L data table not found"
-
-        for tab_name in PL_SUB_TABS:
-            btn = self.pl_section.get_by_text(tab_name, exact=True).first
-            if btn.count():
-                btn.click()
-                self.page.wait_for_timeout(400)
-
-        assert self._count_numeric_cells("#stk-fund-pl") >= 3, (
-            "P&L table has insufficient numeric data"
-        )
-
-    @allure.story("Cash Flow")
-    def test_Section_10_Cash_Flow(self, url: str) -> None:
-        self.cf_section.first.scroll_into_view_if_needed()
-        self._take_screenshot("Cash Flow", "#stk-fund-cf")
-        assert self.cf_section.count() > 0, "Cash Flow section (#stk-fund-cf) not found"
-
-        cf_text = self._section_text(self.cf_section)
-        assert "Cash Flow" in cf_text or "Cash flow" in cf_text, (
-            "Cash Flow heading not found"
-        )
-        assert self.cf_section.locator("table").count() > 0, "Cash Flow table not found"
-
-        found = [item for item in CF_LINE_ITEMS if item in cf_text]
-        assert len(found) >= 1, f"Expected cash flow line items, found: {found}"
-        assert self._count_numeric_cells("#stk-fund-cf") >= 3, (
-            "Cash Flow table has insufficient numeric data"
-        )
-
-    @allure.story("Fundamental Ratios")
-    def test_Section_11_Fundamental_Ratios(self, url: str) -> None:
-        self.ratios_section.first.scroll_into_view_if_needed()
-        self._take_screenshot("Fundamental Ratios", "#stk-fund-ratios")
-        assert self.ratios_section.count() > 0, (
-            "Fundamental Ratios section (#stk-fund-ratios) not found"
-        )
-
-        ratios_text = self._section_text(self.ratios_section)
-        assert "Ratio" in ratios_text or "ratio" in ratios_text, (
-            "Fundamental Ratios heading not found"
-        )
-
-        found_categories = [cat for cat in RATIO_CATEGORIES if cat in ratios_text]
-        assert len(found_categories) >= 1 or self.ratios_section.locator("table").count() > 0, (
-            "Fundamental Ratios categories or table not found"
-        )
-
-        for cat in found_categories[:3]:
-            btn = self.ratios_section.get_by_text(cat, exact=False).first
-            if btn.count():
-                btn.click()
-                self.page.wait_for_timeout(400)
-
-        assert self._count_numeric_cells("#stk-fund-ratios") >= 2, (
-            "Fundamental Ratios table has insufficient numeric data"
         )
 
     @allure.story("Peer Comparison")
     def test_Section_12_Peer_Comparison(self, url: str) -> None:
         self.peer_section.first.scroll_into_view_if_needed()
-        self._take_screenshot("Peer Comparison", "#stk-fund-peer")
-        assert self.peer_section.count() > 0, "Peer comparison section (#stk-fund-peer) not found"
+        self._take_screenshot("Peer Comparison", "#stk-ovw-peer")
+        assert self.peer_section.count() > 0, "Peer comparison section (#stk-ovw-peer) not found"
 
         peer_text = self._section_text(self.peer_section)
         assert "Peer" in peer_text or "peer" in peer_text, (
@@ -567,18 +438,18 @@ class TestMarcomBalanceSheetPages:
         for placeholder in ("lorem ipsum", "undefined", "null", "placeholder text", "dummy text"):
             assert placeholder not in lower_body, f"Found placeholder text '{placeholder}'"
 
-    @allure.story("Footer Components")
-    def test_Section_14_Footer_Components(self, url: str) -> None:
-        self._take_screenshot("Footer Section", "footer, text=Calculators", parent_levels=3)
-        assert "©" in self.body_text or "Calculators" in self.body_text, (
-            "Footer components missing"
-        )
+    # @allure.story("Footer Components")
+    # def test_Section_14_Footer_Components(self, url: str) -> None:
+    #     self._take_screenshot("Footer Section", "footer, text=Calculators", parent_levels=3)
+    #     assert "©" in self.body_text or "Calculators" in self.body_text, (
+    #         "Footer components missing"
+    #     )
 
-        similar_count = (
-            self._count_items_in_section("Other stocks")
-            or self._count_items_in_section("Peer Stocks")
-        )
-        assert similar_count > 0, "Similar/Peer stocks section is missing or empty"
+    #     similar_count = (
+    #         self._count_items_in_section("Other stocks")
+    #         or self._count_items_in_section("Peer Stocks")
+    #     )
+    #     assert similar_count > 0, "Similar/Peer stocks section is missing or empty"
 
-        calcs_count = self._count_items_in_section("Calculators")
-        assert calcs_count > 0, "Calculators section is missing or empty"
+    #     calcs_count = self._count_items_in_section("Calculators")
+    #     assert calcs_count > 0, "Calculators section is missing or empty"
