@@ -2,7 +2,7 @@
 python3 -m playwright install chromium
 
 echo "Starting initial test run..."
-
+rm -rf allure-results/*
 pytest test_dividends.py -n auto --alluredir=allure-results
 
 echo "Checking for failed URLs to retry..."

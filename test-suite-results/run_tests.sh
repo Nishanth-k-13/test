@@ -39,11 +39,12 @@ echo "  URLs file : ${URLS_FILE:-url.csv}"
 echo "  Workers   : ${WORKERS} (${EFFECTIVE_WORKERS} effective)"
 echo "  Sleep     : ${SLEEP_INTERVAL}s every ${URLS_BEFORE_SLEEP} URLs total (~${PER_WORKER_BATCH} per worker)"
 echo "  Re-run    : ${RERUN_FAILURES} retry round(s) for failed URLs (0 = off)"
+echo "  Screenshots: removed (faster bulk runs)"
 echo "  Failures  : ${FAILED_URLS_LOG} (live url + section)"
 echo "  (all from test_results_pages.py)"
 echo ""
 
-PYTEST_ARGS=(test_results_pages.py -v --tb=short)
+PYTEST_ARGS=(test_results_pages.py -v --tb=line)
 
 if [[ "${WORKERS}" != "1" ]]; then
   PYTEST_ARGS+=(-n "${WORKERS}" --dist loadscope)

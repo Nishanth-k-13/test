@@ -34,7 +34,7 @@ SECTION_META: dict[str, dict[str, str]] = {
     "test_Section_1_Header_and_Meta": {
         "suite": "Header and Meta",
         "desc": "Confirms page title, meta description, and H1 tag",
-        "steps": "Load page → Validate title/meta/H1 → Capture screenshot",
+        "steps": "Load page → Validate title/meta/H1",
         "objective": "Header and Meta validation for results leaf pages",
     },
     "test_Section_3_Graph_and_Chart": {

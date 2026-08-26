@@ -1,9 +1,15 @@
+"""
+Marcom SEO Pages Frontend — Financial Results leaf page UI test suite.
+
+Reads URLs from url.csv and validates Results page sections per URL.
+Screenshots removed for speed on large URL batches.
+"""
+
 from __future__ import annotations
 
 import json
 import os
 import re
-from urllib.parse import urljoin
 
 import allure
 import pandas as pd
@@ -11,16 +17,17 @@ import pytest
 from playwright.sync_api import Page, expect, sync_playwright
 
 URLS_FILE = os.getenv("URLS_FILE", "url.csv")
-SCREENSHOT_DIR = os.getenv("SCREENSHOT_DIR", "screenshots")
 
-
-SLEEP_INTERVAL = 5
+SLEEP_INTERVAL = 0
 URLS_BEFORE_SLEEP = 20
-WORKERS = 5
-RERUN_FAILURES = 1
+WORKERS = "auto"
+RERUN_FAILURES = 0
 FAILED_URLS_LOG = "failed-urls.csv"
+PAGE_WAIT_MS = 300
 
 _worker_url_count = 0
+_playwright = None
+_browser = None
 
 
 def _effective_workers() -> int:
@@ -58,6 +65,7 @@ PEER_COMPARISON_TABS = [
     "1 year",
 ]
 
+
 def get_urls() -> list[str]:
     if not os.path.exists(URLS_FILE):
         return []
@@ -73,7 +81,7 @@ URLS = get_urls()
 
 
 def _base_stock_url(url: str) -> str:
-    return re.sub(r"/financial-results/?$", "", url.rstrip("/"))
+    return re.sub(r"/(financial-)?results/?$", "", url.rstrip("/").split("?")[0])
 
 
 def _alternate_domain(url: str) -> str:
@@ -85,7 +93,12 @@ def _alternate_domain(url: str) -> str:
 
 
 def load_page(page: Page, url: str):
-    candidates = [url, _alternate_domain(url), _base_stock_url(url), _base_stock_url(_alternate_domain(url))]
+    candidates = [
+        url,
+        _alternate_domain(url),
+        _base_stock_url(url),
+        _base_stock_url(_alternate_domain(url)),
+    ]
     seen: set[str] = set()
     last_response = None
 
@@ -94,7 +107,9 @@ def load_page(page: Page, url: str):
             continue
         seen.add(candidate)
         try:
-            response = page.goto(candidate, wait_until="load", timeout=60_000)
+            response = page.goto(
+                candidate, wait_until="domcontentloaded", timeout=45_000
+            )
             last_response = response
             if response and response.status == 200:
                 return response, candidate
@@ -108,26 +123,53 @@ def load_page(page: Page, url: str):
     return last_response, url
 
 
+def _blocked_resource(route) -> None:
+    if route.request.resource_type in {"image", "media", "font"}:
+        route.abort()
+    else:
+        route.continue_()
+
+
+def _get_browser():
+    global _playwright, _browser
+    if _browser is None:
+        _playwright = sync_playwright().start()
+        _browser = _playwright.chromium.launch(headless=os.getenv("HEADED", "") != "1")
+    return _browser
+
+
+def _shutdown_browser() -> None:
+    global _playwright, _browser
+    if _browser is not None:
+        try:
+            _browser.close()
+        except Exception:
+            pass
+        _browser = None
+    if _playwright is not None:
+        try:
+            _playwright.stop()
+        except Exception:
+            pass
+        _playwright = None
+
+
+def pytest_sessionfinish(session, exitstatus) -> None:
+    _shutdown_browser()
+
+
 @pytest.fixture(autouse=True, scope="class")
 def setup_browser(request, url: str):
     global _worker_url_count
     _worker_url_count += 1
 
-    playwright = sync_playwright().start()
-    browser = playwright.chromium.launch(headless=os.getenv("HEADED", "") != "1")
+    browser = _get_browser()
     page = browser.new_page()
-
-    page.route(
-        "**/*",
-        lambda route: route.abort()
-        if route.request.resource_type in ["image", "media"]
-        else route.continue_(),
-    )
+    page.route("**/*", _blocked_resource)
 
     def teardown() -> None:
         try:
-            browser.close()
-            playwright.stop()
+            page.close()
         except Exception:
             pass
 
@@ -151,20 +193,27 @@ def setup_browser(request, url: str):
     request.cls.status_code = response.status
     request.cls.loaded_url = loaded_url
 
-    page.wait_for_timeout(1_500)
+    page.wait_for_timeout(PAGE_WAIT_MS)
     TestMarcomResultsPages.ensure_results_panel(page)
 
     safe_url = loaded_url.replace("https://", "").replace("http://", "").replace("/", "_")
     request.cls.safe_url = safe_url
     request.cls.page = page
     request.cls.body_text = page.locator("body").inner_text()
-    
-    # Try to find the results section table wrapper
-    # We look for Quarterly/Yearly since Results pages typically have these
-    request.cls.results_section = page.locator("div").filter(has=page.locator("text=Quarterly")).filter(has=page.locator("table")).last
+
+    request.cls.results_section = (
+        page.locator("div")
+        .filter(has=page.locator("text=Quarterly"))
+        .filter(has=page.locator("table"))
+        .last
+    )
     if request.cls.results_section.count() == 0:
-        # Fallback to Yearly if Quarterly not found
-        request.cls.results_section = page.locator("div").filter(has=page.locator("text=Yearly")).filter(has=page.locator("table")).last
+        request.cls.results_section = (
+            page.locator("div")
+            .filter(has=page.locator("text=Yearly"))
+            .filter(has=page.locator("table"))
+            .last
+        )
 
     request.cls.peer_section = page.locator("#stk-ovw-peer")
 
@@ -175,47 +224,32 @@ def setup_browser(request, url: str):
 @allure.feature("Marcom SEO Pages Frontend")
 @allure.story("Financial Results Leaf Page Verification")
 class TestMarcomResultsPages:
-    screenshot_path = ""
 
     @staticmethod
     def ensure_results_panel(page: Page) -> None:
         try:
-            page.wait_for_selector("text=Quarterly", timeout=15_000)
-            res = page.locator("div").filter(has=page.locator("text=Quarterly")).filter(has=page.locator("table")).last
-            res.wait_for(state="visible", timeout=15_000)
+            page.wait_for_selector("text=Quarterly", timeout=12_000)
+            res = (
+                page.locator("div")
+                .filter(has=page.locator("text=Quarterly"))
+                .filter(has=page.locator("table"))
+                .last
+            )
+            res.wait_for(state="visible", timeout=12_000)
         except Exception:
-            page.wait_for_selector("text=Yearly", timeout=15_000)
-            res = page.locator("div").filter(has=page.locator("text=Yearly")).filter(has=page.locator("table")).last
-            res.wait_for(state="visible", timeout=15_000)
-        
-        # Wait for Peer Comparison section to be attached if present
+            page.wait_for_selector("text=Yearly", timeout=12_000)
+            res = (
+                page.locator("div")
+                .filter(has=page.locator("text=Yearly"))
+                .filter(has=page.locator("table"))
+                .last
+            )
+            res.wait_for(state="visible", timeout=12_000)
+
         try:
-            page.wait_for_selector("#stk-ovw-peer", timeout=10_000)
+            page.wait_for_selector("#stk-ovw-peer", timeout=5_000)
         except Exception:
             pass
-        page.wait_for_timeout(1000)
-
-    def _take_screenshot(
-        self, name: str, locator_str: str | None = None, parent_levels: int = 0
-    ) -> None:
-        os.makedirs(SCREENSHOT_DIR, exist_ok=True)
-        safe_name = name.replace(" ", "_").replace("/", "_")
-        path = f"{SCREENSHOT_DIR}/screenshot_{self.safe_url}_{safe_name}.png"
-        try:
-            if locator_str and self.page.locator(locator_str).count() > 0:
-                el = self.page.locator(locator_str).first
-                if parent_levels > 0:
-                    el = el.locator("xpath=" + "/".join([".."] * parent_levels))
-                el.scroll_into_view_if_needed()
-                self.page.wait_for_timeout(500)
-                el.screenshot(path=path)
-            else:
-                self.page.screenshot(path=path, full_page=True)
-        except Exception:
-            self.page.screenshot(path=path, full_page=True)
-
-        allure.attach.file(path, name=name, attachment_type=allure.attachment_type.PNG)
-        self.screenshot_path = path
 
     def _section_text(self, section) -> str:
         if section.count():
@@ -226,34 +260,16 @@ class TestMarcomResultsPages:
         btn = section.get_by_text(tab_name, exact=True).first
         if btn.count():
             btn.click()
-            self.page.wait_for_timeout(600)
+            self.page.wait_for_timeout(250)
 
     def _count_numeric_cells(self, section) -> int:
         return section.first.evaluate(
             """(el) => {
                 return Array.from(el.querySelectorAll('td, div'))
-                    .filter(c => /[\d,]+/.test(c.textContent))
+                    .filter(c => /[\\d,]+/.test(c.textContent))
                     .length;
             }"""
         )
-
-    def _count_items_in_section(self, section_title: str) -> int:
-        js_code = f"""() => {{
-            const headings = Array.from(document.querySelectorAll('h2, h3, h4'));
-            const heading = headings.find(h =>
-                h.textContent.toLowerCase().includes('{section_title}'.toLowerCase())
-            );
-            if (!heading) return 0;
-            const parent = heading.parentElement;
-            if ('{section_title}'.toLowerCase().includes('peer stocks')) {{
-                const links = Array.from(parent.querySelectorAll('a[href*="/stocks/"]'));
-                return new Set(links.map(a => a.href)).size;
-            }}
-            const links = parent.querySelectorAll('a');
-            if (links.length > 0) return links.length;
-            return parent.querySelectorAll('li').length;
-        }}"""
-        return self.page.evaluate(js_code)
 
     @allure.story("Header and Meta")
     def test_Section_1_Header_and_Meta(self, url: str) -> None:
@@ -268,13 +284,10 @@ class TestMarcomResultsPages:
 
         h1 = self.page.locator("h1")
         expect(h1).to_have_count(1, timeout=2_000)
-        self._take_screenshot("Header Section", "h1")
         assert len(h1.first.inner_text().strip()) > 0, "H1 tag is empty"
-
 
     @allure.story("Graph & Chart")
     def test_Section_3_Graph_and_Chart(self, url: str) -> None:
-        self._take_screenshot("Graph Section", "canvas, svg")
         has_chart = (
             self.page.locator("canvas").count() > 0 or self.page.locator("svg").count() > 0
         )
@@ -283,9 +296,10 @@ class TestMarcomResultsPages:
 
     @allure.story("Content Tabs")
     def test_Section_4_Content_Tabs(self, url: str) -> None:
-        self._take_screenshot("Tabs Section", "text=Overview", parent_levels=4)
         overview = self.page.locator("text=Overview")
-        res_tab = self.page.locator("text=Financial Results").or_(self.page.locator("text=Results"))
+        res_tab = self.page.locator("text=Financial Results").or_(
+            self.page.locator("text=Results")
+        )
         fundamentals = self.page.locator("text=Fundamentals")
         assert (
             overview.count() > 0 or res_tab.count() > 0 or fundamentals.count() > 0
@@ -296,7 +310,6 @@ class TestMarcomResultsPages:
 
     @allure.story("Live Stats and Market Cap")
     def test_Section_5_Live_Stats_and_Market_Cap(self, url: str) -> None:
-        self._take_screenshot("Live Stats Section", "text=Market Cap", parent_levels=5)
         market_cap = self.page.locator("text=Market Cap")
         mcap_alt = self.page.locator("text=M.Cap")
         assert market_cap.count() > 0 or mcap_alt.count() > 0, (
@@ -311,19 +324,19 @@ class TestMarcomResultsPages:
         )
         assert has_ratio, "Live Stats ratio data (PE/P/E/P/B) missing"
 
-
     @allure.story("Financial Results Structure")
     def test_Section_7_Results_Structure(self, url: str) -> None:
         self.results_section.first.scroll_into_view_if_needed()
         assert self.results_section.count() > 0, "Financial Results section not found"
-
-        assert self.results_section.locator("table").count() > 0, "Financial Results table not found"
+        assert self.results_section.locator("table").count() > 0, (
+            "Financial Results table not found"
+        )
 
         for tab_name in ["Quarterly", "Yearly"]:
             btn = self.results_section.get_by_text(tab_name, exact=True).first
             if btn.count() > 0:
                 btn.click()
-                self.page.wait_for_timeout(600)
+                self.page.wait_for_timeout(250)
                 assert self.results_section.locator("table").count() > 0, (
                     f"Financial Results table not visible after clicking {tab_name}"
                 )
@@ -337,7 +350,6 @@ class TestMarcomResultsPages:
             self._click_sub_tab(self.results_section, "Yearly")
 
         res_text = self._section_text(self.results_section)
-
         found = [item for item in RESULTS_LINE_ITEMS if item in res_text]
         assert len(found) >= 1, f"Expected results line items, found: {found}"
 
@@ -346,12 +358,12 @@ class TestMarcomResultsPages:
             f"Financial Results table has insufficient numeric cells: {numeric_count}"
         )
 
-
     @allure.story("Peer Comparison")
     def test_Section_12_Peer_Comparison(self, url: str) -> None:
         self.peer_section.first.scroll_into_view_if_needed()
-        self._take_screenshot("Peer Comparison", "#stk-ovw-peer")
-        assert self.peer_section.count() > 0, "Peer comparison section (#stk-ovw-peer) not found"
+        assert self.peer_section.count() > 0, (
+            "Peer comparison section (#stk-ovw-peer) not found"
+        )
 
         peer_text = self._section_text(self.peer_section)
         assert "Similar Companies" in peer_text or "Peer" in peer_text, (
@@ -365,21 +377,21 @@ class TestMarcomResultsPages:
             btn = self.peer_section.get_by_text(tab_name, exact=True).first
             if btn.count():
                 btn.click()
-                self.page.wait_for_timeout(600)
+                self.page.wait_for_timeout(250)
                 assert self.peer_section.locator(".flex-1").count() > 0, (
                     f"Peer comparison table not visible after clicking {tab_name}"
                 )
 
-
     @allure.story("FAQs")
     def test_Section_13_FAQs(self, url: str) -> None:
-        self._take_screenshot("FAQs Section", "text=FAQ", parent_levels=3)
         assert "FAQ" in self.body_text or "Frequently Asked Questions" in self.body_text, (
             "FAQs not found"
         )
 
         faq_count = 0
-        for script_text in self.page.locator("script[type='application/ld+json']").all_inner_texts():
+        for script_text in self.page.locator(
+            "script[type='application/ld+json']"
+        ).all_inner_texts():
             if "FAQPage" in script_text:
                 try:
                     data = json.loads(script_text)
@@ -390,5 +402,11 @@ class TestMarcomResultsPages:
         assert faq_count > 0, "No FAQs found in structured data (JSON-LD)"
 
         lower_body = self.body_text.lower()
-        for placeholder in ("lorem ipsum", "undefined", "null", "placeholder text", "dummy text"):
+        for placeholder in (
+            "lorem ipsum",
+            "undefined",
+            "null",
+            "placeholder text",
+            "dummy text",
+        ):
             assert placeholder not in lower_body, f"Found placeholder text '{placeholder}'"
