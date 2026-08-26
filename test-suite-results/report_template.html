@@ -257,9 +257,9 @@
 <body>
 <header class="report-header">
   <div class="header-inner">
-    <div class="eyebrow">Automated Test Suite · Marcom SEO Pages Frontend · Balance Sheet</div>
-    <h1 class="title">Test Execution Report — Balance Sheet Pages</h1>
-    <p class="subtitle">Execution Range: <span id="hdrRange">2026-08-25 10:29:05 UTC → 2026-08-25 10:29:06 UTC</span> &middot; <span>1 test class</span> &middot; 1 target URLs &middot; 8s total runtime &middot; 2 passed / 0 failed / 0 skipped</p>
+    <div class="eyebrow">__REPORT_EYEBROW__</div>
+    <h1 class="title">__REPORT_TITLE__</h1>
+    <p class="subtitle">__REPORT_SUBTITLE__</p>
   </div>
 </header>
 <div class="container">
@@ -317,7 +317,7 @@
 </div>
 <script>
 (function(){
-  const RAW = [{"cls": "tests.MarcomSeoBalanceSheetTest", "method": "test_Section_8_Balance_Sheet_Line_Items_and_Data", "suite": "Balance Sheet Line Items and Data", "url": "https://fyers.co.in/stocks/bajaj-consumer-care-ltd/balance-sheet", "row": "", "status": "passed", "desc": "Confirms balance sheet line items and numeric table data", "steps": "Validate Total Assets/Share Capital rows → Assert table cells contain numbers", "detail": "Objective: Balance Sheet line items and data validation\n\nWhat This Test Verifies:\n- Confirms balance sheet line items and numeric table data\n\nSteps (as executed):\nValidate Total Assets/Share Capital rows → Assert table cells contain numbers\n\nResult: PASSED", "fail": "", "start": "2026-08-25 10:29:05 UTC", "dur": 0.79, "n": 1}, {"cls": "tests.MarcomSeoBalanceSheetTest", "method": "test_Section_12_Peer_Comparison", "suite": "Peer Comparison", "url": "https://fyers.co.in/stocks/bajaj-consumer-care-ltd/balance-sheet", "row": "", "status": "passed", "desc": "Confirms peer comparison table and sub-tabs", "steps": "Locate #stk-fund-peer → Validate Overview/Performance/Valuation tabs", "detail": "Objective: Peer Comparison section validation\n\nWhat This Test Verifies:\n- Confirms peer comparison table and sub-tabs\n\nSteps (as executed):\nLocate #stk-fund-peer → Validate Overview/Performance/Valuation tabs\n\nResult: PASSED", "fail": "", "start": "2026-08-25 10:29:06 UTC", "dur": 2.65, "n": 2}];
+  const RAW = __RAW_JSON__;
   const statusClass = s => ({passed:'passed', failed:'failed', skipped:'skipped'}[s] || 'other');
   const total = RAW.length;
   const passed = RAW.filter(d=>d.status==='passed').length;

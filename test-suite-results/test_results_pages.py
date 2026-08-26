@@ -18,13 +18,12 @@ SLEEP_INTERVAL = 5
 URLS_BEFORE_SLEEP = 20
 WORKERS = 5
 RERUN_FAILURES = 1
-FAILED_URLS_LOG = "failed-urls.csv" 
+FAILED_URLS_LOG = "failed-urls.csv"
 
 _worker_url_count = 0
 
 
 def _effective_workers() -> int:
-    """Worker count used to split URLS_BEFORE_SLEEP (set by run_tests.sh when possible)."""
     env = os.getenv("EFFECTIVE_WORKERS")
     if env and str(env).isdigit():
         return max(1, int(env))
@@ -40,40 +39,17 @@ def _effective_workers() -> int:
 def _urls_per_worker_before_sleep() -> int:
     return max(1, URLS_BEFORE_SLEEP // _effective_workers())
 
-FINANCIAL_OVERVIEW_CARDS = [
-    "Compounded Sales Growth",
-    "Compounded Profit Growth",
-    "Stock Price CAGR",
-    "Return on Equity",
-]
 
-PL_SUB_TABS = ["Consolidated", "Standalone", "Quarterly", "Yearly"]
-
-PL_LINE_ITEMS = [
+RESULTS_LINE_ITEMS = [
+    "Revenue",
     "Net Revenue",
     "Total Revenue",
     "Net Profit",
     "Operating Profit",
-    "Other Income",
+    "EBITDA",
+    "EPS",
     "Profit Before Tax",
     "PBT",
-]
-
-BS_LINE_ITEMS = [
-    "Total Assets",
-    "Share Capital",
-    "Shareholder's Funds",
-    "Shareholders' Funds",
-    "Total Liabilities",
-]
-
-CF_LINE_ITEMS = [
-    "Cash Flow from operating activities",
-    "Cash Flow from investing activities",
-    "Cash Flow from financing activities",
-    "Cash Flow from Operating Activities",
-    "Cash Flow from Investing Activities",
-    "Cash Flow from Financing Activities",
 ]
 
 PEER_COMPARISON_TABS = [
@@ -81,16 +57,6 @@ PEER_COMPARISON_TABS = [
     "1 month",
     "1 year",
 ]
-
-RATIO_CATEGORIES = [
-    "Profitability",
-    "Liquidity",
-    "Valuation",
-    "Growth",
-    "Efficiency",
-    "Leverage",
-]
-
 
 def get_urls() -> list[str]:
     if not os.path.exists(URLS_FILE):
@@ -107,7 +73,7 @@ URLS = get_urls()
 
 
 def _base_stock_url(url: str) -> str:
-    return re.sub(r"/balance-sheet/?$", "", url.rstrip("/"))
+    return re.sub(r"/financial-results/?$", "", url.rstrip("/"))
 
 
 def _alternate_domain(url: str) -> str:
@@ -119,7 +85,6 @@ def _alternate_domain(url: str) -> str:
 
 
 def load_page(page: Page, url: str):
-    """Load balance-sheet leaf URL; fall back to stock page if leaf 404s."""
     candidates = [url, _alternate_domain(url), _base_stock_url(url), _base_stock_url(_alternate_domain(url))]
     seen: set[str] = set()
     last_response = None
@@ -187,16 +152,20 @@ def setup_browser(request, url: str):
     request.cls.loaded_url = loaded_url
 
     page.wait_for_timeout(1_500)
-    TestMarcomBalanceSheetPages.ensure_balance_sheet_panel(page)
+    TestMarcomResultsPages.ensure_results_panel(page)
 
     safe_url = loaded_url.replace("https://", "").replace("http://", "").replace("/", "_")
     request.cls.safe_url = safe_url
     request.cls.page = page
     request.cls.body_text = page.locator("body").inner_text()
-    request.cls.pl_section = page.locator("#stk-fund-pl")
-    request.cls.bs_section = page.locator("div").filter(has=page.locator("text=Consolidated")).filter(has=page.locator("table")).last
-    request.cls.cf_section = page.locator("#stk-fund-cf")
-    request.cls.ratios_section = page.locator("#stk-fund-ratios")
+    
+    # Try to find the results section table wrapper
+    # We look for Quarterly/Yearly since Results pages typically have these
+    request.cls.results_section = page.locator("div").filter(has=page.locator("text=Quarterly")).filter(has=page.locator("table")).last
+    if request.cls.results_section.count() == 0:
+        # Fallback to Yearly if Quarterly not found
+        request.cls.results_section = page.locator("div").filter(has=page.locator("text=Yearly")).filter(has=page.locator("table")).last
+
     request.cls.peer_section = page.locator("#stk-ovw-peer")
 
     yield
@@ -204,18 +173,26 @@ def setup_browser(request, url: str):
 
 @pytest.mark.parametrize("url", URLS, scope="class")
 @allure.feature("Marcom SEO Pages Frontend")
-@allure.story("Balance Sheet Leaf Page Verification")
-class TestMarcomBalanceSheetPages:
+@allure.story("Financial Results Leaf Page Verification")
+class TestMarcomResultsPages:
     screenshot_path = ""
 
     @staticmethod
-    def ensure_balance_sheet_panel(page: Page) -> None:
-        page.wait_for_selector("text=Consolidated", timeout=30_000)
-        # Wait for table to appear so that data is fully loaded
-        bs = page.locator("div").filter(has=page.locator("text=Consolidated")).filter(has=page.locator("table")).last
-        bs.wait_for(state="visible", timeout=30_000)
-        # Also wait for Peer Comparison section to be attached
-        page.wait_for_selector("#stk-ovw-peer", timeout=30_000)
+    def ensure_results_panel(page: Page) -> None:
+        try:
+            page.wait_for_selector("text=Quarterly", timeout=15_000)
+            res = page.locator("div").filter(has=page.locator("text=Quarterly")).filter(has=page.locator("table")).last
+            res.wait_for(state="visible", timeout=15_000)
+        except Exception:
+            page.wait_for_selector("text=Yearly", timeout=15_000)
+            res = page.locator("div").filter(has=page.locator("text=Yearly")).filter(has=page.locator("table")).last
+            res.wait_for(state="visible", timeout=15_000)
+        
+        # Wait for Peer Comparison section to be attached if present
+        try:
+            page.wait_for_selector("#stk-ovw-peer", timeout=10_000)
+        except Exception:
+            pass
         page.wait_for_timeout(1000)
 
     def _take_screenshot(
@@ -294,13 +271,6 @@ class TestMarcomBalanceSheetPages:
         self._take_screenshot("Header Section", "h1")
         assert len(h1.first.inner_text().strip()) > 0, "H1 tag is empty"
 
-    # @allure.story("Analytics Tags")
-    # def test_Section_2_Analytics_Tags(self, url: str) -> None:
-    #     html_content = self.page.content()
-    #     self._take_screenshot("Analytics Source", "head")
-    #     assert (
-    #         "googletagmanager.com" in html_content or "google-analytics.com" in html_content
-    #     ), "GA/GTM tags are missing"
 
     @allure.story("Graph & Chart")
     def test_Section_3_Graph_and_Chart(self, url: str) -> None:
@@ -315,11 +285,11 @@ class TestMarcomBalanceSheetPages:
     def test_Section_4_Content_Tabs(self, url: str) -> None:
         self._take_screenshot("Tabs Section", "text=Overview", parent_levels=4)
         overview = self.page.locator("text=Overview")
-        bs_tab = self.page.locator("text=Balance Sheet")
+        res_tab = self.page.locator("text=Financial Results").or_(self.page.locator("text=Results"))
         fundamentals = self.page.locator("text=Fundamentals")
         assert (
-            overview.count() > 0 or bs_tab.count() > 0 or fundamentals.count() > 0
-        ), "Main content tabs (Overview / Balance Sheet / Fundamentals) not found"
+            overview.count() > 0 or res_tab.count() > 0 or fundamentals.count() > 0
+        ), "Main content tabs (Overview / Financial Results / Fundamentals) not found"
 
         faq_tab = self.page.locator("text=FAQ")
         assert faq_tab.count() > 0, "Content tab 'FAQ' is missing"
@@ -341,34 +311,41 @@ class TestMarcomBalanceSheetPages:
         )
         assert has_ratio, "Live Stats ratio data (PE/P/E/P/B) missing"
 
-    @allure.story("Balance Sheet Structure")
-    def test_Section_7_Balance_Sheet_Structure(self, url: str) -> None:
-        self.bs_section.first.scroll_into_view_if_needed()
-        assert self.bs_section.count() > 0, "Balance Sheet section not found"
 
-        assert self.bs_section.locator("table").count() > 0, "Balance Sheet table not found"
+    @allure.story("Financial Results Structure")
+    def test_Section_7_Results_Structure(self, url: str) -> None:
+        self.results_section.first.scroll_into_view_if_needed()
+        assert self.results_section.count() > 0, "Financial Results section not found"
 
-        for tab_name in ["Consolidated", "Standalone"]:
-            btn = self.bs_section.get_by_text(tab_name, exact=True).first
-            assert btn.count() > 0, f"Balance Sheet sub-tab missing: {tab_name}"
-            btn.click()
-            self.page.wait_for_timeout(600)
-            assert self.bs_section.locator("table").count() > 0, (
-                f"Balance Sheet table not visible after clicking {tab_name}"
-            )
+        assert self.results_section.locator("table").count() > 0, "Financial Results table not found"
 
-    @allure.story("Balance Sheet Line Items and Data")
-    def test_Section_8_Balance_Sheet_Line_Items_and_Data(self, url: str) -> None:
-        self._click_sub_tab(self.bs_section, "Consolidated")
-        bs_text = self._section_text(self.bs_section)
+        for tab_name in ["Quarterly", "Yearly"]:
+            btn = self.results_section.get_by_text(tab_name, exact=True).first
+            if btn.count() > 0:
+                btn.click()
+                self.page.wait_for_timeout(600)
+                assert self.results_section.locator("table").count() > 0, (
+                    f"Financial Results table not visible after clicking {tab_name}"
+                )
 
-        found = [item for item in BS_LINE_ITEMS if item in bs_text]
-        assert len(found) >= 1, f"Expected balance sheet line items, found: {found}"
+    @allure.story("Financial Results Line Items and Data")
+    def test_Section_8_Results_Line_Items_and_Data(self, url: str) -> None:
+        btn = self.results_section.get_by_text("Quarterly", exact=True).first
+        if btn.count() > 0:
+            self._click_sub_tab(self.results_section, "Quarterly")
+        elif self.results_section.get_by_text("Yearly", exact=True).first.count() > 0:
+            self._click_sub_tab(self.results_section, "Yearly")
 
-        numeric_count = self._count_numeric_cells(self.bs_section)
+        res_text = self._section_text(self.results_section)
+
+        found = [item for item in RESULTS_LINE_ITEMS if item in res_text]
+        assert len(found) >= 1, f"Expected results line items, found: {found}"
+
+        numeric_count = self._count_numeric_cells(self.results_section)
         assert numeric_count >= 3, (
-            f"Balance Sheet table has insufficient numeric cells: {numeric_count}"
+            f"Financial Results table has insufficient numeric cells: {numeric_count}"
         )
+
 
     @allure.story("Peer Comparison")
     def test_Section_12_Peer_Comparison(self, url: str) -> None:
@@ -393,6 +370,7 @@ class TestMarcomBalanceSheetPages:
                     f"Peer comparison table not visible after clicking {tab_name}"
                 )
 
+
     @allure.story("FAQs")
     def test_Section_13_FAQs(self, url: str) -> None:
         self._take_screenshot("FAQs Section", "text=FAQ", parent_levels=3)
@@ -414,19 +392,3 @@ class TestMarcomBalanceSheetPages:
         lower_body = self.body_text.lower()
         for placeholder in ("lorem ipsum", "undefined", "null", "placeholder text", "dummy text"):
             assert placeholder not in lower_body, f"Found placeholder text '{placeholder}'"
-
-    # @allure.story("Footer Components")
-    # def test_Section_14_Footer_Components(self, url: str) -> None:
-    #     self._take_screenshot("Footer Section", "footer, text=Calculators", parent_levels=3)
-    #     assert "©" in self.body_text or "Calculators" in self.body_text, (
-    #         "Footer components missing"
-    #     )
-
-    #     similar_count = (
-    #         self._count_items_in_section("Other stocks")
-    #         or self._count_items_in_section("Peer Stocks")
-    #     )
-    #     assert similar_count > 0, "Similar/Peer stocks section is missing or empty"
-
-    #     calcs_count = self._count_items_in_section("Calculators")
-    #     assert calcs_count > 0, "Calculators section is missing or empty"

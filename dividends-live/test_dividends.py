@@ -21,10 +21,10 @@ def get_urls():
 URLS = get_urls()
 
 
-SLEEP_INTERVAL = int(os.getenv("SLEEP_TIME", "6"))
+SLEEP_INTERVAL = int(os.getenv("SLEEP_TIME", "5"))
 URLS_BEFORE_SLEEP = int(os.getenv("URLS_BATCH_SIZE", "20"))
 
-worker_url_count = 0
+worker_url_count = 1
 
 @pytest.mark.parametrize("url", URLS)
 @allure.feature("Dividend Page SEO Automation")
@@ -69,8 +69,8 @@ def test_seo_data_extraction(page: Page, url: str):
             result["Status Code"] = response.status if response else "N/A"
             final_url = page.url
             result["Final URL"] = final_url
-            # Flag redirect if the final URL no longer ends with /dividends
-            if not final_url.rstrip("/").endswith("/dividends"):
+            # Flag redirect if the final URL no longer ends with /results
+            if not final_url.rstrip("/").endswith("/results"):
                 result["Redirected"] = "Yes"
         
         with allure.step("Wait for page to settle"):

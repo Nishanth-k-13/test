@@ -5,7 +5,7 @@ python3 -m playwright install chromium
 
 echo "Starting initial test run..."
 # Run the tests in parallel and generate allure results
-pytest test_dividends.py -n auto --alluredir=allure-results
+pytest test_dividends.py -n 8 --alluredir=allure-results
 
 echo "Checking for failed URLs to retry..."
 # Check if there are failed tests and prepare a retry file
