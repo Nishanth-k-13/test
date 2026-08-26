@@ -44,10 +44,39 @@ else:
 
 if [ $? -eq 1 ]; then
     export URLS_FILE="retry_urls.csv"
+    export RETRY_MODE="1"
     echo "Running pytest again for failed URLs..."
     pytest test_dividends.py -n auto --alluredir=allure-results
     
-    echo "Retries appended to seo_report.csv"
+    echo "Deduplicating seo_report.csv..."
+    python3 -c "
+import csv
+rows = []
+header = None
+seen_urls = set()
+with open('seo_report.csv', 'r') as f:
+    reader = csv.reader(f)
+    try:
+        header = next(reader)
+        for row in reader:
+            rows.append(row)
+    except StopIteration:
+        pass
+
+# Deduplicate keeping the LAST occurrence
+unique_rows = []
+for row in reversed(rows):
+    if row and row[0] not in seen_urls:
+        unique_rows.append(row)
+        seen_urls.add(row[0])
+
+unique_rows.reverse()
+with open('seo_report.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    if header:
+        writer.writerow(header)
+    writer.writerows(unique_rows)
+"
     rm -f retry_urls.csv
 fi
 

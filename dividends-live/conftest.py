@@ -6,6 +6,8 @@ OUTPUT_CSV = "seo_report.csv"
 
 def pytest_sessionstart(session):
     """Initialize CSV and write headers before tests start."""
+    if os.environ.get("RETRY_MODE") == "1":
+        return
     with open(OUTPUT_CSV, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
