@@ -18,9 +18,11 @@ SLEEP_INTERVAL = 5
 URLS_BEFORE_SLEEP = 20
 WORKERS = 5
 RERUN_FAILURES = 1
-FAILED_URLS_LOG = "failed-urls.csv" 
+FAILED_URLS_LOG = "failed-urls.csv"
 
 _worker_url_count = 0
+_playwright = None
+_browser = None
 
 
 def _effective_workers() -> int:
@@ -143,26 +145,53 @@ def load_page(page: Page, url: str):
     return last_response, url
 
 
+def _blocked_resource(route) -> None:
+    if route.request.resource_type in {"image", "media", "font"}:
+        route.abort()
+    else:
+        route.continue_()
+
+
+def _get_browser():
+    global _playwright, _browser
+    if _browser is None:
+        _playwright = sync_playwright().start()
+        _browser = _playwright.chromium.launch(headless=os.getenv("HEADED", "") != "1")
+    return _browser
+
+
+def _shutdown_browser() -> None:
+    global _playwright, _browser
+    if _browser is not None:
+        try:
+            _browser.close()
+        except Exception:
+            pass
+        _browser = None
+    if _playwright is not None:
+        try:
+            _playwright.stop()
+        except Exception:
+            pass
+        _playwright = None
+
+
+def pytest_sessionfinish(session, exitstatus) -> None:
+    _shutdown_browser()
+
+
 @pytest.fixture(autouse=True, scope="class")
 def setup_browser(request, url: str):
     global _worker_url_count
     _worker_url_count += 1
 
-    playwright = sync_playwright().start()
-    browser = playwright.chromium.launch(headless=os.getenv("HEADED", "") != "1")
+    browser = _get_browser()
     page = browser.new_page()
-
-    page.route(
-        "**/*",
-        lambda route: route.abort()
-        if route.request.resource_type in ["image", "media"]
-        else route.continue_(),
-    )
+    page.route("**/*", _blocked_resource)
 
     def teardown() -> None:
         try:
-            browser.close()
-            playwright.stop()
+            page.close()
         except Exception:
             pass
 

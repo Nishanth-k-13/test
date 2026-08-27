@@ -23,6 +23,8 @@ SLEEP_INTERVAL = int(os.getenv("SLEEP_TIME", "0"))
 URLS_BEFORE_SLEEP = int(os.getenv("URLS_BATCH_SIZE", "20"))
 
 _worker_url_count = 0
+_playwright = None
+_browser = None
 
 
 def get_urls() -> list[str]:
@@ -39,26 +41,53 @@ def get_urls() -> list[str]:
 URLS = get_urls()
 
 
+def _blocked_resource(route) -> None:
+    if route.request.resource_type in {"image", "media", "font"}:
+        route.abort()
+    else:
+        route.continue_()
+
+
+def _get_browser():
+    global _playwright, _browser
+    if _browser is None:
+        _playwright = sync_playwright().start()
+        _browser = _playwright.chromium.launch(headless=os.getenv("HEADED", "") != "1")
+    return _browser
+
+
+def _shutdown_browser() -> None:
+    global _playwright, _browser
+    if _browser is not None:
+        try:
+            _browser.close()
+        except Exception:
+            pass
+        _browser = None
+    if _playwright is not None:
+        try:
+            _playwright.stop()
+        except Exception:
+            pass
+        _playwright = None
+
+
+def pytest_sessionfinish(session, exitstatus) -> None:
+    _shutdown_browser()
+
+
 @pytest.fixture(autouse=True, scope="class")
 def setup_browser(request, url: str):
     global _worker_url_count
     _worker_url_count += 1
 
-    playwright = sync_playwright().start()
-    browser = playwright.chromium.launch(headless=os.getenv("HEADED", "") != "1")
+    browser = _get_browser()
     page = browser.new_page()
-
-    page.route(
-        "**/*",
-        lambda route: route.abort()
-        if route.request.resource_type in ["image", "media"]
-        else route.continue_(),
-    )
+    page.route("**/*", _blocked_resource)
 
     def teardown() -> None:
         try:
-            browser.close()
-            playwright.stop()
+            page.close()
         except Exception:
             pass
 
@@ -76,7 +105,7 @@ def setup_browser(request, url: str):
         )
         page.wait_for_timeout(SLEEP_INTERVAL * 1000)
 
-    response = page.goto(url, wait_until="load", timeout=60_000)
+    response = page.goto(url, wait_until="domcontentloaded", timeout=45_000)
     status_code = response.status if response else "Error"
     request.cls.status_code = status_code
 
